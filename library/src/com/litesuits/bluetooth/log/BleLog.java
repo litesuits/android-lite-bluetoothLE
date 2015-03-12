@@ -1,4 +1,4 @@
-package com.litesuits.android.log;
+package com.litesuits.bluetooth.log;
 
 /**
  * the logger
@@ -6,12 +6,12 @@ package com.litesuits.android.log;
  * @author MaTianyu
  *         2014-1-1下午4:05:39
  */
-public final class Log {
+public final class BleLog {
 
 	public static boolean isPrint = true;
 	private static String defaultTag = "Log";
 
-	private Log() {}
+	private BleLog() {}
 
 	public static void setTag(String tag) {
 		defaultTag = tag;

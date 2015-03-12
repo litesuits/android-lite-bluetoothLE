@@ -14,18 +14,18 @@ public abstract class TimeoutCallback extends BluetoothHelper implements Runnabl
         this.gatt = gatt;
     }
 
-        public Object getTag() {
-            return tag;
-        }
-
-        public void setTag(Object tag) {
-            this.tag = tag;
-        }
-
-        public abstract void onTimeout(BluetoothGatt gatt);
-
-        @Override
-        public void run() {
-            onTimeout(gatt);
-        }
+    public Object getTag() {
+        return tag;
     }
+
+    public void setTag(Object tag) {
+        this.tag = tag;
+    }
+
+    public abstract void onTimeout(BluetoothGatt gatt);
+
+    @Override
+    public void run() {
+        onTimeout(gatt);
+    }
+}

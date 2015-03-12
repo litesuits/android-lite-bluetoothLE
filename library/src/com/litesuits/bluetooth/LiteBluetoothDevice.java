@@ -10,6 +10,8 @@ import android.content.Context;
  */
 public class LiteBluetoothDevice {
     private BluetoothDevice bluetoothDevice;
+    private int rssi;
+    private byte[] scanRecord;
     //private Context         context;
     //private BluetoothGatt   gatt;
 
@@ -21,6 +23,12 @@ public class LiteBluetoothDevice {
 
     public void connect(Context context, LiteBluetoothGatCallback callback) {
         BluetoothGatt gatt = bluetoothDevice.connectGatt(context, false, callback);
+        callback.notifyConnectStart(gatt);
+    }
+
+
+    public void connect(Context context, boolean autoConnect, LiteBluetoothGatCallback callback) {
+        BluetoothGatt gatt = bluetoothDevice.connectGatt(context, autoConnect, callback);
         callback.notifyConnectStart(gatt);
     }
 

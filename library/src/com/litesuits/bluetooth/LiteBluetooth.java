@@ -4,12 +4,14 @@ import android.app.Activity;
 import android.bluetooth.*;
 import android.content.Context;
 import android.content.Intent;
-import com.litesuits.android.log.Log;
 import com.litesuits.bluetooth.conn.ConnectError;
 import com.litesuits.bluetooth.conn.ConnectListener;
 import com.litesuits.bluetooth.conn.ConnectState;
+import com.litesuits.bluetooth.log.BleLog;
 import com.litesuits.bluetooth.scan.PeriodMacScanCallback;
 import com.litesuits.bluetooth.scan.PeriodScanCallback;
+import com.litesuits.bluetooth.utils.BluetoothUtil;
+import com.litesuits.bluetooth.utils.HandlerUtil;
 
 import java.util.UUID;
 
@@ -44,8 +46,11 @@ public class LiteBluetooth {
         return null;
     }
 
-
     public boolean connect(final String mac, final ConnectListener listener) {
+        return connect(mac, false, listener);
+    }
+
+    public boolean connect(final String mac, final boolean autoConnect, final ConnectListener listener) {
         if (mac == null || mac.split(":").length != 6) {
             listener.onFailed(ConnectError.Invalidmac);
             return false;
@@ -68,7 +73,7 @@ public class LiteBluetooth {
                     public void run() {
                         LiteBluetoothDevice liteDevice = new LiteBluetoothDevice(device);
                         listener.onStateChanged(ConnectState.Connecting);
-                        liteDevice.connect(context, new LiteBluetoothGatCallback(20000, 10000) {
+                        liteDevice.connect(context, autoConnect, new LiteBluetoothGatCallback(20000, 10000) {
                             @Override
                             public void onConnectionStateChange(BluetoothGatt gatt, int status, int newState) {
                                 super.onConnectionStateChange(gatt, status, newState);
@@ -82,7 +87,7 @@ public class LiteBluetooth {
 
                             @Override
                             public void onConnectTimeout(BluetoothGatt gatt) {
-                                Log.e(TAG, " onConnectTimeout gatt: " + gatt);
+                                BleLog.e(TAG, " onConnectTimeout gatt: " + gatt);
                                 closeBluetoothGatt(gatt);
                                 listener.onFailed(ConnectError.ConnectTimeout);
                                 listener.onStateChanged(ConnectState.Initialed);
@@ -131,6 +136,78 @@ public class LiteBluetooth {
 
         });
         return true;
+    }
+
+
+    public void connectDirectly(final BluetoothDevice device, final ConnectListener listener) {
+        connectDirectly(device, false, listener);
+    }
+
+    public void connectDirectly(final BluetoothDevice device, final boolean autoConnect, final ConnectListener listener) {
+        HandlerUtil.runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                LiteBluetoothDevice liteDevice = new LiteBluetoothDevice(device);
+                listener.onStateChanged(ConnectState.Connecting);
+                liteDevice.connect(context, autoConnect, new LiteBluetoothGatCallback(20000, 10000) {
+                    @Override
+                    public void onConnectionStateChange(BluetoothGatt gatt, int status, int newState) {
+                        super.onConnectionStateChange(gatt, status, newState);
+                    }
+
+                    @Override
+                    public void onConnectSuccess(BluetoothGatt gatt) {
+                        discoverServices(gatt, DEFAULT_DISCOVER_TIMEOUT);
+                        listener.onStateChanged(ConnectState.ServiceDiscovering);
+                    }
+
+                    @Override
+                    public void onConnectTimeout(BluetoothGatt gatt) {
+                        BleLog.e(TAG, " onConnectTimeout gatt: " + gatt);
+                        BluetoothUtil.closeBluetoothGatt(gatt);
+                        listener.onFailed(ConnectError.ConnectTimeout);
+                        listener.onStateChanged(ConnectState.Initialed);
+                    }
+
+
+                    @Override
+                    public void onServicesDiscoveSuccess(BluetoothGatt gatt) {
+                        listener.onStateChanged(ConnectState.ServiceDiscovered);
+                        listener.onServicesDiscovered(gatt);
+                    }
+
+                    @Override
+                    public void onServicesDiscoverTimeout(BluetoothGatt gatt) {
+                        BluetoothUtil.closeBluetoothGatt(gatt);
+                        listener.onFailed(ConnectError.ServiceDiscoverTimeout);
+                    }
+
+                    @Override
+                    public void onCharacteristicWrite(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status) {
+                        super.onCharacteristicWrite(gatt, characteristic, status);
+                        listener.onCharacteristicWrite(gatt, characteristic, status);
+                    }
+
+                    @Override
+                    public void onCharacteristicChanged(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic) {
+                        super.onCharacteristicChanged(gatt, characteristic);
+                        listener.onCharacteristicChanged(gatt, characteristic);
+                    }
+
+                    @Override
+                    public void onOtherTimeout(BluetoothGatt gatt, String msg) {
+
+                    }
+
+                    @Override
+                    public void onDisConnected(BluetoothGatt gatt) {
+                        listener.onStateChanged(ConnectState.DisConnected);
+                    }
+
+                });
+
+            }
+        });
     }
 
     public void startScan(PeriodScanCallback callback) {
