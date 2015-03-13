@@ -55,13 +55,13 @@ public class LiteBluetooth {
             listener.onFailed(ConnectError.Invalidmac);
             return false;
         }
-        listener.onStateChanged(ConnectState.Scanning);
+        listener.stateChanged(ConnectState.Scanning);
         startScan(new PeriodMacScanCallback(mac, 30000, null) {
 
             @Override
             public void onScanTimeout() {
                 listener.onFailed(ConnectError.ScanTimeout);
-                listener.onStateChanged(ConnectState.Initialed);
+                listener.stateChanged(ConnectState.Initialed);
             }
 
             @Override
@@ -72,7 +72,7 @@ public class LiteBluetooth {
                     @Override
                     public void run() {
                         LiteBluetoothDevice liteDevice = new LiteBluetoothDevice(device);
-                        listener.onStateChanged(ConnectState.Connecting);
+                        listener.stateChanged(ConnectState.Connecting);
                         liteDevice.connect(context, autoConnect, new LiteBluetoothGatCallback(20000, 10000) {
                             @Override
                             public void onConnectionStateChange(BluetoothGatt gatt, int status, int newState) {
@@ -82,7 +82,7 @@ public class LiteBluetooth {
                             @Override
                             public void onConnectSuccess(BluetoothGatt gatt) {
                                 discoverServices(gatt, DEFAULT_DISCOVER_TIMEOUT);
-                                listener.onStateChanged(ConnectState.ServiceDiscovering);
+                                listener.stateChanged(ConnectState.ServiceDiscovering);
                             }
 
                             @Override
@@ -90,13 +90,13 @@ public class LiteBluetooth {
                                 BleLog.e(TAG, " onConnectTimeout gatt: " + gatt);
                                 closeBluetoothGatt(gatt);
                                 listener.onFailed(ConnectError.ConnectTimeout);
-                                listener.onStateChanged(ConnectState.Initialed);
+                                listener.stateChanged(ConnectState.Initialed);
                             }
 
 
                             @Override
                             public void onServicesDiscoveSuccess(BluetoothGatt gatt) {
-                                listener.onStateChanged(ConnectState.ServiceDiscovered);
+                                listener.stateChanged(ConnectState.ServiceDiscovered);
                                 listener.onServicesDiscovered(gatt);
                             }
 
@@ -114,7 +114,7 @@ public class LiteBluetooth {
 
                             @Override
                             public void onCharacteristicChanged(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic) {
-                                super.onCharacteristicChanged(gatt, characteristic);
+                                //super.onCharacteristicChanged(gatt, characteristic);
                                 listener.onCharacteristicChanged(gatt, characteristic);
                             }
 
@@ -125,7 +125,7 @@ public class LiteBluetooth {
 
                             @Override
                             public void onDisConnected(BluetoothGatt gatt) {
-                                listener.onStateChanged(ConnectState.DisConnected);
+                                listener.stateChanged(ConnectState.DisConnected);
                             }
 
                         });
@@ -148,7 +148,7 @@ public class LiteBluetooth {
             @Override
             public void run() {
                 LiteBluetoothDevice liteDevice = new LiteBluetoothDevice(device);
-                listener.onStateChanged(ConnectState.Connecting);
+                listener.stateChanged(ConnectState.Connecting);
                 liteDevice.connect(context, autoConnect, new LiteBluetoothGatCallback(20000, 10000) {
                     @Override
                     public void onConnectionStateChange(BluetoothGatt gatt, int status, int newState) {
@@ -158,7 +158,7 @@ public class LiteBluetooth {
                     @Override
                     public void onConnectSuccess(BluetoothGatt gatt) {
                         discoverServices(gatt, DEFAULT_DISCOVER_TIMEOUT);
-                        listener.onStateChanged(ConnectState.ServiceDiscovering);
+                        listener.stateChanged(ConnectState.ServiceDiscovering);
                     }
 
                     @Override
@@ -166,13 +166,13 @@ public class LiteBluetooth {
                         BleLog.e(TAG, " onConnectTimeout gatt: " + gatt);
                         BluetoothUtil.closeBluetoothGatt(gatt);
                         listener.onFailed(ConnectError.ConnectTimeout);
-                        listener.onStateChanged(ConnectState.Initialed);
+                        listener.stateChanged(ConnectState.Initialed);
                     }
 
 
                     @Override
                     public void onServicesDiscoveSuccess(BluetoothGatt gatt) {
-                        listener.onStateChanged(ConnectState.ServiceDiscovered);
+                        listener.stateChanged(ConnectState.ServiceDiscovered);
                         listener.onServicesDiscovered(gatt);
                     }
 
@@ -201,7 +201,7 @@ public class LiteBluetooth {
 
                     @Override
                     public void onDisConnected(BluetoothGatt gatt) {
-                        listener.onStateChanged(ConnectState.DisConnected);
+                        listener.stateChanged(ConnectState.DisConnected);
                     }
 
                 });

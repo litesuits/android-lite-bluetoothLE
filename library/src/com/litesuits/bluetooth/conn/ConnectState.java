@@ -9,13 +9,16 @@ public enum ConnectState {
     ServiceDiscovered(4, "设备连接成功..."),
     DisConnected(6, "连接已断开");
 
+    public boolean isInConnecting() {
+        return code > 0 && code < 6;
+    }
 
     ConnectState(int code, String message) {
         this.code = code;
         this.message = message;
     }
 
-    private int    code;
+    private int code;
     private String message;
 
     public int getCode() {

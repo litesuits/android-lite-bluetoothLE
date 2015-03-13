@@ -4,6 +4,20 @@ import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCharacteristic;
 
 public abstract class ConnectListener extends BluetoothHelper {
+    private ConnectState connectState = ConnectState.Initialed;
+
+    public ConnectState getConnectState() {
+        return connectState;
+    }
+
+    public void setConnectState(ConnectState connectState) {
+        this.connectState = connectState;
+    }
+
+
+    public void stateChanged(ConnectState state) {
+        onStateChanged(state);
+    }
 
     public abstract void onStateChanged(ConnectState state);
 
