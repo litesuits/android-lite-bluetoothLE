@@ -21,15 +21,17 @@ public class LiteBluetoothDevice {
         //this.context = context.getApplicationContext();
     }
 
-    public void connect(Context context, LiteBluetoothGatCallback callback) {
+    public BluetoothGatt connect(Context context, LiteBluetoothGatCallback callback) {
         BluetoothGatt gatt = bluetoothDevice.connectGatt(context, false, callback);
         callback.notifyConnectStart(gatt);
+        return gatt;
     }
 
 
-    public void connect(Context context, boolean autoConnect, LiteBluetoothGatCallback callback) {
+    public BluetoothGatt connect(Context context, boolean autoConnect, LiteBluetoothGatCallback callback) {
         BluetoothGatt gatt = bluetoothDevice.connectGatt(context, autoConnect, callback);
         callback.notifyConnectStart(gatt);
+        return gatt;
     }
 
 

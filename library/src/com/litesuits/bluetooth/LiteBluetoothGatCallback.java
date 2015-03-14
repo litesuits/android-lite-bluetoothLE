@@ -72,7 +72,7 @@ public abstract class LiteBluetoothGatCallback extends BluetoothGattCallback {
     public void onConnectionStateChange(BluetoothGatt gatt, int status, int newState) {
         //super.onConnectionStateChange(gatt, status, newState);
         if (BleLog.isPrint) {
-            BleLog.i(TAG, "onServicesDiscovered  status: " + status + "  ,thread: " + Thread.currentThread().getId());
+            BleLog.v(TAG, "onServicesDiscovered  status: " + status + "  ,thread: " + Thread.currentThread().getId());
         }
         this.bluetoothGatt = gatt;
         if (newState == BluetoothGatt.STATE_CONNECTED) {
@@ -90,7 +90,7 @@ public abstract class LiteBluetoothGatCallback extends BluetoothGattCallback {
     public void onServicesDiscovered(BluetoothGatt gatt, int status) {
         //super.onServicesDiscovered(gatt, status);
         if (BleLog.isPrint) {
-            BleLog.i(TAG, "onServicesDiscovered  status: " + status + "  ,thread: " + Thread.currentThread().getId());
+            BleLog.v(TAG, "onServicesDiscovered  status: " + status + "  ,thread: " + Thread.currentThread().getId());
         }
         if (status == BluetoothGatt.GATT_SUCCESS) {
             notifyDiscoverServicesOver();
@@ -104,7 +104,7 @@ public abstract class LiteBluetoothGatCallback extends BluetoothGattCallback {
     public void onCharacteristicRead(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status) {
         //super.onCharacteristicRead(gatt, characteristic, status);
         if (BleLog.isPrint) {
-            BleLog.i(TAG, "onCharacteristicRead  status: " + status +
+            BleLog.v(TAG, "onCharacteristicRead  status: " + status +
                     " ,characteristic : " + characteristic.getUuid() +
                     " ,characteristic : " + HexUtil.encodeHexStr(characteristic.getValue()) +
                     " ,thread: " + Thread.currentThread().getId());
@@ -115,7 +115,7 @@ public abstract class LiteBluetoothGatCallback extends BluetoothGattCallback {
     public void onCharacteristicWrite(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status) {
         //super.onCharacteristicWrite(gatt, characteristic, status);
         if (BleLog.isPrint) {
-            BleLog.i(TAG, "onCharacteristicWrite  status: " + status +
+            BleLog.v(TAG, "onCharacteristicWrite  status: " + status +
                     " ,characteristic : " + characteristic.getUuid() +
                     " ,characteristic : " + HexUtil.encodeHexStr(characteristic.getValue()) +
                     " ,thread: " + Thread.currentThread().getId());
@@ -126,7 +126,7 @@ public abstract class LiteBluetoothGatCallback extends BluetoothGattCallback {
     public void onCharacteristicChanged(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic) {
         //super.onCharacteristicChanged(gatt, characteristic);
         if (BleLog.isPrint) {
-            BleLog.i(TAG, "onCharacteristicChanged  uuid: " + characteristic.getUuid() +
+            BleLog.v(TAG, "onCharacteristicChanged  uuid: " + characteristic.getUuid() +
                     " ,characteristic : " + HexUtil.encodeHexStr(characteristic.getValue()) +
                     " ,thread: " + Thread.currentThread().getId());
         }
@@ -136,7 +136,7 @@ public abstract class LiteBluetoothGatCallback extends BluetoothGattCallback {
     public void onDescriptorRead(BluetoothGatt gatt, BluetoothGattDescriptor descriptor, int status) {
         //super.onDescriptorRead(gatt, descriptor, status);
         if (BleLog.isPrint) {
-            BleLog.i(TAG, "onDescriptorRead  status: " + status +
+            BleLog.v(TAG, "onDescriptorRead  status: " + status +
                     " ,characteristic : " + descriptor.getUuid() +
                     " ,characteristic : " + HexUtil.encodeHexStr(descriptor.getValue()) +
                     " ,thread: " + Thread.currentThread().getId());
@@ -147,7 +147,7 @@ public abstract class LiteBluetoothGatCallback extends BluetoothGattCallback {
     public void onDescriptorWrite(BluetoothGatt gatt, BluetoothGattDescriptor descriptor, int status) {
         //super.onDescriptorWrite(gatt, descriptor, status);
         if (BleLog.isPrint) {
-            BleLog.i(TAG, "onDescriptorWrite  status: " + status +
+            BleLog.v(TAG, "onDescriptorWrite  status: " + status +
                     " ,characteristic : " + descriptor.getUuid() +
                     " ,characteristic : " + HexUtil.encodeHexStr(descriptor.getValue()) +
                     " ,thread: " + Thread.currentThread().getId());
@@ -158,7 +158,7 @@ public abstract class LiteBluetoothGatCallback extends BluetoothGattCallback {
     public void onReliableWriteCompleted(BluetoothGatt gatt, int status) {
         //super.onReliableWriteCompleted(gatt, status);
         if (BleLog.isPrint) {
-            BleLog.i(TAG, "onReliableWriteCompleted  status: " + status + " ,thread: " + Thread.currentThread().getId());
+            BleLog.v(TAG, "onReliableWriteCompleted  status: " + status + " ,thread: " + Thread.currentThread().getId());
         }
     }
 
@@ -166,7 +166,7 @@ public abstract class LiteBluetoothGatCallback extends BluetoothGattCallback {
     public void onReadRemoteRssi(BluetoothGatt gatt, int rssi, int status) {
         //super.onReadRemoteRssi(gatt, rssi, status);
         if (BleLog.isPrint) {
-            BleLog.i(TAG, "connect  onReadRemoteRssi  status: " + status + " , rssi : " + rssi +
+            BleLog.v(TAG, "connect  onReadRemoteRssi  status: " + status + " , rssi : " + rssi +
                     " ,thread: " + Thread.currentThread().getId());
         }
     }
