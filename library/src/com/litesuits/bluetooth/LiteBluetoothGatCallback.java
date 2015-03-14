@@ -10,21 +10,34 @@ import java.util.TimerTask;
 import java.util.UUID;
 
 public abstract class LiteBluetoothGatCallback extends BluetoothGattCallback {
-    private static final String TAG                      = "LiteBluetoothGatCallback";
-    public static final  int    DEFAULT_CONNECT_TIMEOUT  = 10000;
-    public static final  int    DEFAULT_DISCOVER_TIMEOUT = 5000;
+    private static final String TAG = "LiteBluetoothGatCallback";
+    public static final int DEFAULT_CONNECT_TIMEOUT = 20000;
+    public static final int DEFAULT_DISCOVER_TIMEOUT = 15000;
 
-    private long    connectTimeout          = DEFAULT_CONNECT_TIMEOUT;
-    private long    discoverServicesTimeout = DEFAULT_DISCOVER_TIMEOUT;
+    private long connectTimeout = DEFAULT_CONNECT_TIMEOUT;
+    private long discoverServicesTimeout = DEFAULT_DISCOVER_TIMEOUT;
     //private              Timer  timer                   = new Timer();
-    private Handler handler                 = new Handler(Looper.getMainLooper());
+    private Handler handler = new Handler(Looper.getMainLooper());
     private Runnable connectTimeoutTask;
     private Runnable discoverServicesTimeoutTask;
     private Runnable otherTimeoutTask;
+    private BluetoothGatt bluetoothGatt;
 
     protected LiteBluetoothGatCallback(long connectTimeout, long discoverServicesTimeout) {
-        this.connectTimeout = connectTimeout;
-        this.discoverServicesTimeout = discoverServicesTimeout;
+        if (connectTimeout > 0) {
+            this.connectTimeout = connectTimeout;
+        }
+        if (discoverServicesTimeout > 0) {
+            this.discoverServicesTimeout = discoverServicesTimeout;
+        }
+    }
+
+    public BluetoothGatt getBluetoothGatt() {
+        return bluetoothGatt;
+    }
+
+    public void setBluetoothGatt(BluetoothGatt bluetoothGatt) {
+        this.bluetoothGatt = bluetoothGatt;
     }
 
     public abstract void onConnectSuccess(BluetoothGatt gatt);
@@ -41,8 +54,7 @@ public abstract class LiteBluetoothGatCallback extends BluetoothGattCallback {
 
     public abstract void onDisConnected(BluetoothGatt gatt);
 
-    protected void discoverServices(BluetoothGatt gatt, long timeout) {
-        this.discoverServicesTimeout = timeout;
+    protected void discoverServices(BluetoothGatt gatt) {
         notifyDiscoverServicesStart(gatt);
         gatt.discoverServices();
     }
@@ -62,6 +74,7 @@ public abstract class LiteBluetoothGatCallback extends BluetoothGattCallback {
         if (BleLog.isPrint) {
             BleLog.i(TAG, "onServicesDiscovered  status: " + status + "  ,thread: " + Thread.currentThread().getId());
         }
+        this.bluetoothGatt = gatt;
         if (newState == BluetoothGatt.STATE_CONNECTED) {
             notifyConnectOver();
             onConnectSuccess(gatt);
@@ -160,50 +173,62 @@ public abstract class LiteBluetoothGatCallback extends BluetoothGattCallback {
 
     public void notifyConnectStart(final BluetoothGatt gatt) {
         notifyConnectOver();
-        if (connectTimeoutTask == null) connectTimeoutTask = new TimerTask() {
-            @Override
-            public void run() {
-                BleLog.e(TAG, "Bluetooth connect timeout. 蓝牙连接超时 ");
-                onConnectTimeout(gatt);
-            }
-        };
+        if (connectTimeoutTask == null) {
+            connectTimeoutTask = new TimerTask() {
+                @Override
+                public void run() {
+                    BleLog.e(TAG, "Bluetooth connect timeout. 蓝牙连接超时 ");
+                    onConnectTimeout(gatt);
+                }
+            };
+        }
         handler.postDelayed(connectTimeoutTask, connectTimeout);
     }
 
     public void notifyConnectOver() {
-        if (connectTimeoutTask != null) handler.removeCallbacks(connectTimeoutTask);
+        if (connectTimeoutTask != null) {
+            handler.removeCallbacks(connectTimeoutTask);
+        }
     }
 
     public void notifyDiscoverServicesStart(final BluetoothGatt gatt) {
         notifyDiscoverServicesOver();
-        if (discoverServicesTimeoutTask == null) discoverServicesTimeoutTask = new TimerTask() {
-            @Override
-            public void run() {
-                BleLog.e(TAG, "Bluetooth discover services timeout. 蓝牙发现服务超时 ");
-                onServicesDiscoverTimeout(gatt);
-            }
-        };
+        if (discoverServicesTimeoutTask == null) {
+            discoverServicesTimeoutTask = new TimerTask() {
+                @Override
+                public void run() {
+                    BleLog.e(TAG, "Bluetooth discover services timeout. 蓝牙发现服务超时 ");
+                    onServicesDiscoverTimeout(gatt);
+                }
+            };
+        }
         handler.postDelayed(discoverServicesTimeoutTask, discoverServicesTimeout);
     }
 
     public void notifyDiscoverServicesOver() {
-        if (discoverServicesTimeoutTask != null) handler.removeCallbacks(discoverServicesTimeoutTask);
+        if (discoverServicesTimeoutTask != null) {
+            handler.removeCallbacks(discoverServicesTimeoutTask);
+        }
     }
 
     public void notifyOtherStart(final BluetoothGatt gatt, long timeoutMillis, final String msg) {
         notifyOtherOver();
-        if (otherTimeoutTask == null) otherTimeoutTask = new TimerTask() {
-            @Override
-            public void run() {
-                BleLog.e(TAG, "Bluetooth other things timeout. 蓝牙操作 超时： " + msg);
-                onOtherTimeout(gatt, msg);
-            }
-        };
+        if (otherTimeoutTask == null) {
+            otherTimeoutTask = new TimerTask() {
+                @Override
+                public void run() {
+                    BleLog.e(TAG, "Bluetooth other things timeout. 蓝牙操作 超时： " + msg);
+                    onOtherTimeout(gatt, msg);
+                }
+            };
+        }
         handler.postDelayed(otherTimeoutTask, timeoutMillis);
     }
 
     public void notifyOtherOver() {
-        if (otherTimeoutTask != null) handler.removeCallbacks(otherTimeoutTask);
+        if (otherTimeoutTask != null) {
+            handler.removeCallbacks(otherTimeoutTask);
+        }
     }
 
     public long getDiscoverServicesTimeout() {

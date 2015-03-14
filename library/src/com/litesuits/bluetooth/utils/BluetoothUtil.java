@@ -4,9 +4,11 @@ import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattDescriptor;
 import android.bluetooth.BluetoothGattService;
+import android.util.Log;
 import com.litesuits.bluetooth.conn.TimeoutCallback;
 import com.litesuits.bluetooth.log.BleLog;
 
+import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.UUID;
 
@@ -33,6 +35,26 @@ public class BluetoothUtil {
     }
 
     /*------------  BluetoothGatt  ------------ */
+    /**
+     * Clears the device cache. After uploading new hello4 the DFU target will have other services than before.
+     */
+    public static boolean refreshDeviceCache(BluetoothGatt gatt) {
+        /*
+         * There is a refresh() method in BluetoothGatt class but for now it's hidden. We will call it using reflections.
+		 */
+        try {
+            final Method refresh = BluetoothGatt.class.getMethod("refresh");
+            if (refresh != null) {
+                final boolean success = (Boolean) refresh.invoke(gatt);
+                Log.i(TAG, "Refreshing result: " + success);
+                return success;
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "An exception occured while refreshing device", e);
+        }
+        return false;
+    }
+
     public static void closeBluetoothGatt(BluetoothGatt gatt) {
         if (gatt != null) {
             gatt.disconnect();

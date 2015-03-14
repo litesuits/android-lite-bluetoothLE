@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.bluetooth.*;
 import android.content.Context;
 import android.content.Intent;
+import android.util.Log;
 import com.litesuits.bluetooth.conn.ConnectError;
 import com.litesuits.bluetooth.conn.ConnectListener;
 import com.litesuits.bluetooth.conn.ConnectState;
@@ -52,7 +53,7 @@ public class LiteBluetooth {
 
     public boolean connect(final String mac, final boolean autoConnect, final ConnectListener listener) {
         if (mac == null || mac.split(":").length != 6) {
-            listener.onFailed(ConnectError.Invalidmac);
+            listener.failed(ConnectError.Invalidmac);
             return false;
         }
         listener.stateChanged(ConnectState.Scanning);
@@ -60,80 +61,14 @@ public class LiteBluetooth {
 
             @Override
             public void onScanTimeout() {
-                listener.onFailed(ConnectError.ScanTimeout);
+                listener.failed(ConnectError.ScanTimeout);
                 listener.stateChanged(ConnectState.Initialed);
             }
 
             @Override
             public void onDeviceFound(final BluetoothDevice device, int rssi, byte[] scanRecord) {
-                this.stopScanAndNotify();
-
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        LiteBluetoothDevice liteDevice = new LiteBluetoothDevice(device);
-                        listener.stateChanged(ConnectState.Connecting);
-                        liteDevice.connect(context, autoConnect, new LiteBluetoothGatCallback(20000, 10000) {
-                            @Override
-                            public void onConnectionStateChange(BluetoothGatt gatt, int status, int newState) {
-                                super.onConnectionStateChange(gatt, status, newState);
-                            }
-
-                            @Override
-                            public void onConnectSuccess(BluetoothGatt gatt) {
-                                discoverServices(gatt, DEFAULT_DISCOVER_TIMEOUT);
-                                listener.stateChanged(ConnectState.ServiceDiscovering);
-                            }
-
-                            @Override
-                            public void onConnectTimeout(BluetoothGatt gatt) {
-                                BleLog.e(TAG, " onConnectTimeout gatt: " + gatt);
-                                closeBluetoothGatt(gatt);
-                                listener.onFailed(ConnectError.ConnectTimeout);
-                                listener.stateChanged(ConnectState.Initialed);
-                            }
-
-
-                            @Override
-                            public void onServicesDiscoveSuccess(BluetoothGatt gatt) {
-                                listener.stateChanged(ConnectState.ServiceDiscovered);
-                                listener.onServicesDiscovered(gatt);
-                            }
-
-                            @Override
-                            public void onServicesDiscoverTimeout(BluetoothGatt gatt) {
-                                closeBluetoothGatt(gatt);
-                                listener.onFailed(ConnectError.ServiceDiscoverTimeout);
-                            }
-
-                            @Override
-                            public void onCharacteristicWrite(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status) {
-                                super.onCharacteristicWrite(gatt, characteristic, status);
-                                listener.onCharacteristicWrite(gatt, characteristic, status);
-                            }
-
-                            @Override
-                            public void onCharacteristicChanged(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic) {
-                                //super.onCharacteristicChanged(gatt, characteristic);
-                                listener.onCharacteristicChanged(gatt, characteristic);
-                            }
-
-                            @Override
-                            public void onOtherTimeout(BluetoothGatt gatt, String msg) {
-
-                            }
-
-                            @Override
-                            public void onDisConnected(BluetoothGatt gatt) {
-                                listener.stateChanged(ConnectState.DisConnected);
-                            }
-
-                        });
-
-                    }
-                });
+                connectDirectly(device, autoConnect, listener);
             }
-
         });
         return true;
     }
@@ -144,28 +79,65 @@ public class LiteBluetooth {
     }
 
     public void connectDirectly(final BluetoothDevice device, final boolean autoConnect, final ConnectListener listener) {
+        Log.i(TAG, "连接：" + device.getName() + " mac:" + device.getAddress() + "  autoConnect:" + autoConnect);
         HandlerUtil.runOnUiThread(new Runnable() {
             @Override
             public void run() {
                 LiteBluetoothDevice liteDevice = new LiteBluetoothDevice(device);
                 listener.stateChanged(ConnectState.Connecting);
-                liteDevice.connect(context, autoConnect, new LiteBluetoothGatCallback(20000, 10000) {
+                liteDevice.connect(context, autoConnect, new LiteBluetoothGatCallback(20000, 30000) {
+
                     @Override
                     public void onConnectionStateChange(BluetoothGatt gatt, int status, int newState) {
                         super.onConnectionStateChange(gatt, status, newState);
                     }
 
                     @Override
-                    public void onConnectSuccess(BluetoothGatt gatt) {
-                        discoverServices(gatt, DEFAULT_DISCOVER_TIMEOUT);
+                    public void onConnectSuccess(final BluetoothGatt gatt) {
+                        listener.setBluetoothGatt(gatt);
+                        listener.stateChanged(ConnectState.Connected);
+
+                        /*
+					 *  The onConnectionStateChange callback is called just after establishing connection and before sending Encryption Request BLE event in case of a paired device.
+					 *  In that case and when the Service Changed CCCD is enabled we will get the indication after initializing the encryption, about 1600 milliseconds later.
+					 *  If we discover services right after connecting, the onServicesDiscovered callback will be called immediately, before receiving the indication and the following
+					 *  service discovery and we may end up with old, application's services instead.
+					 *
+					 *  This is to support the buttonless switch from application to bootloader mode where the DFU bootloader notifies the master about service change.
+					 *  Tested on Nexus 4 (Android 4.4.4 and 5), Nexus 5 (Android 5), Samsung Note 2 (Android 4.4.2). The time after connection to end of service discovery is about 1.6s
+					 *  on Samsung Note 2.
+					 *
+					 *  NOTE: We are doing this to avoid the hack with calling the hidden gatt.refresh() method, at least for bonded devices.
+					 */
+                        if (gatt.getDevice().getBondState() == BluetoothDevice.BOND_BONDED) {
+                            try {
+                                synchronized (this) {
+                                    Log.i(TAG, "Waiting 1600 ms for a possible Service Changed indication...");
+                                    wait(1600);
+
+                                    // After 1.6s the services are already discovered so the following gatt.discoverServices() finishes almost immediately.
+
+                                    // NOTE: This also works with shorted waiting time. The gatt.discoverServices() must be called after the indication is received which is
+                                    // about 600ms after establishing connection. Values 600 - 1600ms should be OK.
+                                }
+                            } catch (InterruptedException e) {
+                                // do nothing
+                            }
+                        }
+                        discoverServices(gatt);
                         listener.stateChanged(ConnectState.ServiceDiscovering);
+                        //HandlerUtil.runOnUiThreadDelay(new Runnable() {
+                        //    @Override
+                        //    public void run() {
+                        //    }
+                        //}, 2000);
                     }
 
                     @Override
                     public void onConnectTimeout(BluetoothGatt gatt) {
                         BleLog.e(TAG, " onConnectTimeout gatt: " + gatt);
                         BluetoothUtil.closeBluetoothGatt(gatt);
-                        listener.onFailed(ConnectError.ConnectTimeout);
+                        listener.failed(ConnectError.ConnectTimeout);
                         listener.stateChanged(ConnectState.Initialed);
                     }
 
@@ -179,7 +151,7 @@ public class LiteBluetooth {
                     @Override
                     public void onServicesDiscoverTimeout(BluetoothGatt gatt) {
                         BluetoothUtil.closeBluetoothGatt(gatt);
-                        listener.onFailed(ConnectError.ServiceDiscoverTimeout);
+                        listener.failed(ConnectError.ServiceDiscoverTimeout);
                     }
 
                     @Override
@@ -204,6 +176,15 @@ public class LiteBluetooth {
                         listener.stateChanged(ConnectState.DisConnected);
                     }
 
+                    @Override
+                    public void onDescriptorRead(BluetoothGatt gatt, BluetoothGattDescriptor descriptor, int status) {
+                        listener.onDescriptorRead(gatt,descriptor,status);
+                    }
+
+                    @Override
+                    public void onDescriptorWrite(BluetoothGatt gatt, BluetoothGattDescriptor descriptor, int status) {
+                        listener.onDescriptorWrite(gatt,descriptor,status);
+                    }
                 });
 
             }
@@ -223,10 +204,6 @@ public class LiteBluetooth {
     public void stopScan(BluetoothAdapter.LeScanCallback callback) {
         bluetoothAdapter.stopLeScan(callback);
     }
-
-    //public void discoverServices(BluetoothDevice device) {
-    //
-    //}
 
     public void enableBluetooth(Activity activity, int requestCode) {
         Intent intent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);

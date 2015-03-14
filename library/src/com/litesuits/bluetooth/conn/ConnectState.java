@@ -5,8 +5,9 @@ public enum ConnectState {
     Initialed(0, "初始化状态：连接未建立"),
     Scanning(1, "扫描中..."),
     Connecting(2, "设备连接中..."),
-    ServiceDiscovering(3, "服务发现中..."),
-    ServiceDiscovered(4, "设备连接成功..."),
+    Connected(3, "设备已连接"),
+    ServiceDiscovering(4, "服务发现中..."),
+    ServiceDiscovered(5, "已发现服务"),
     DisConnected(6, "连接已断开");
 
     public boolean isInConnecting() {

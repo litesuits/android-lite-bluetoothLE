@@ -9,18 +9,27 @@ import android.bluetooth.BluetoothDevice;
  */
 public abstract class PeriodMacScanCallback extends PeriodScanCallback {
     private String mac;
+    private boolean hasConnect;
 
     protected PeriodMacScanCallback(String mac, long timeoutMillis, BluetoothAdapter adapter) {
         super(timeoutMillis, adapter);
         this.mac = mac;
-        if (mac == null) throw new IllegalArgumentException("start scan, mac can not be null!");
+        if (mac == null) {
+            throw new IllegalArgumentException("start scan, mac can not be null!");
+        }
     }
 
 
     @Override
     public void onLeScan(BluetoothDevice device, int rssi, byte[] scanRecord) {
-        if (mac.equalsIgnoreCase(device.getAddress())) {
-            onDeviceFound(device, rssi, scanRecord);
+        if (hasConnect) {
+            stopScanAndNotify();
+        } else {
+            if (mac.equalsIgnoreCase(device.getAddress())) {
+                stopScanAndNotify();
+                onDeviceFound(device, rssi, scanRecord);
+                hasConnect = true;
+            }
         }
     }
 

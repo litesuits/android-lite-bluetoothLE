@@ -6,20 +6,22 @@ import android.bluetooth.BluetoothGattDescriptor;
 import android.bluetooth.BluetoothGattService;
 import android.os.Handler;
 import android.os.Looper;
+import android.util.Log;
 import com.litesuits.bluetooth.log.BleLog;
 import com.litesuits.bluetooth.utils.HexUtil;
 
+import java.lang.reflect.Method;
 import java.util.UUID;
 
 /**
  * @author MaTianyu
  * @date 2015-01-29
  */
-public class BluetoothHelper {
+public abstract class BluetoothHelper {
     private static final String TAG = "BluetoothHelper";
     private Handler handler = new Handler(Looper.getMainLooper());
     private TimeoutCallback timerTask;
-    private long writeTimeout = 1500;
+    private long writeTimeout = 5000;
     private long readTimeout = 1500;
 
     /*------------ getter and setter  ------------ */
@@ -99,9 +101,10 @@ public class BluetoothHelper {
     }
 
     public boolean characteristicWrite(BluetoothGatt gatt, BluetoothGattCharacteristic charact, String hex, TimeoutCallback callback) {
-        if (hex == null) {
+        if (charact == null || hex == null) {
             return false;
         }
+        BleLog.e(TAG, charact.getUuid() + "写入：" + hex);
         return characteristicWrite(gatt, charact, HexUtil.decodeHex(hex.toCharArray()), callback);
     }
 
@@ -112,6 +115,7 @@ public class BluetoothHelper {
             notifyTimerTaskStart(gatt, getWriteTimeout(), callback);
             return true;
         } else {
+            refreshDeviceCache(gatt);
             BleLog.e(TAG, "Characteristic 为空");
             return false;
         }
@@ -141,4 +145,24 @@ public class BluetoothHelper {
         return false;
     }
 
+
+    /**
+     * Clears the device cache. After uploading new hello4 the DFU target will have other services than before.
+     */
+    public boolean refreshDeviceCache(BluetoothGatt gatt) {
+        /*
+         * There is a refresh() method in BluetoothGatt class but for now it's hidden. We will call it using reflections.
+		 */
+        try {
+            final Method refresh = BluetoothGatt.class.getMethod("refresh");
+            if (refresh != null) {
+                final boolean success = (Boolean) refresh.invoke(gatt);
+                Log.i(TAG, "Refreshing result: " + success);
+                return success;
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "An exception occured while refreshing device", e);
+        }
+        return false;
+    }
 }

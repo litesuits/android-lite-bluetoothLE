@@ -8,7 +8,8 @@ public enum ConnectError {
     ServiceDiscoverTimeout(-4, "服务发现超时"),
     WriteTimeout(-5, "写入超时"),
     ReadTimeout(-6, "读取超时"),
-    InvalidStatus(-7, "错误的蓝牙状态");
+    InvalidStatus(-7, "错误的蓝牙状态"),
+    CharNotFound(-8, "未发现指定通道");
 
     ConnectError(int code, String message) {
         this.code = code;

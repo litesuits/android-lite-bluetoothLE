@@ -37,8 +37,8 @@ public abstract class PeriodScanCallback extends BluetoothHelper implements Blue
 
     public void stopScanAndNotify() {
         if (adapter == null) throw new IllegalArgumentException("Scan callback has no BluetoothAdapter！");
-        adapter.stopLeScan(PeriodScanCallback.this);
         notifyScanStoped();
+        adapter.stopLeScan(PeriodScanCallback.this);
     }
 
     public void notifyScanStoped() {
