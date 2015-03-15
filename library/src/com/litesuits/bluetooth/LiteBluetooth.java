@@ -48,7 +48,7 @@ public class LiteBluetooth {
         return null;
     }
 
-    public boolean connect(final String mac, final boolean autoConnect, final ConnectListener listener) {
+    public synchronized boolean connect(final String mac, final boolean autoConnect, final ConnectListener listener) {
         if (mac == null || mac.split(":").length != 6) {
             listener.failed(ConnectError.Invalidmac);
             return false;
@@ -82,7 +82,7 @@ public class LiteBluetooth {
                 LiteBluetoothDevice liteDevice = new LiteBluetoothDevice(device);
                 listener.stateChanged(ConnectState.Connecting);
                 BluetoothGatt gatt = liteDevice.connect(context, autoConnect,
-                        new LiteBluetoothGatCallback(20000, 30000) {
+                        new LiteBluetoothGatCallback(20000, 20000) {
 
                             @Override
                             public void onConnectionStateChange(BluetoothGatt gatt, int status, int newState) {

@@ -10,8 +10,12 @@ public enum ConnectState {
     ServiceDiscovered(5, "已发现服务"),
     DisConnected(6, "连接已断开");
 
+    public boolean isInConnected() {
+        return this == ServiceDiscovered;
+    }
+
     public boolean isInConnecting() {
-        return code > 0 && code < 6;
+        return this.code > 0 && this.code < 6;
     }
 
     ConnectState(int code, String message) {
