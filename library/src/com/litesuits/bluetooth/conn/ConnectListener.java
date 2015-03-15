@@ -14,6 +14,10 @@ public abstract class ConnectListener extends BluetoothHelper {
         return connectState;
     }
 
+    public boolean isInConnecting() {
+        return getConnectState().isInConnecting();
+    }
+
     public BluetoothGatt getBluetoothGatt() {
         return bluetoothGatt;
     }
@@ -34,7 +38,7 @@ public abstract class ConnectListener extends BluetoothHelper {
 
     public abstract void onStateChanged(ConnectState state);
 
-    public final void failed(ConnectError error){
+    public final void failed(ConnectError error) {
         BleLog.w(TAG, "Ble error: " + error);
         onFailed(error);
     }
