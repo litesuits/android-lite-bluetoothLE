@@ -26,13 +26,10 @@ public abstract class ConnectListener extends BluetoothHelper {
         this.bluetoothGatt = bluetoothGatt;
     }
 
-    public void setConnectState(ConnectState connectState) {
-        this.connectState = connectState;
-    }
-
 
     public final void stateChanged(ConnectState state) {
         BleLog.i(TAG, "Ble stateChanged: " + state);
+        connectState = state;
         onStateChanged(state);
     }
 
@@ -57,5 +54,7 @@ public abstract class ConnectListener extends BluetoothHelper {
     }
 
     public void onDescriptorWrite(BluetoothGatt gatt, BluetoothGattDescriptor descriptor, int status) {
+    }
+    public void onReadRemoteRssi(BluetoothGatt gatt, int rssi, int status) {
     }
 }

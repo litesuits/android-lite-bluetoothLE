@@ -85,6 +85,12 @@ public class LiteBluetooth {
                         new LiteBluetoothGatCallback(20000, 20000) {
 
                             @Override
+                            public void onReadRemoteRssi(BluetoothGatt gatt, int rssi, int status) {
+                                super.onReadRemoteRssi(gatt, rssi, status);
+                                listener.onReadRemoteRssi(gatt, rssi, status);
+                            }
+
+                            @Override
                             public void onConnectionStateChange(BluetoothGatt gatt, int status, int newState) {
                                 super.onConnectionStateChange(gatt, status, newState);
                             }
