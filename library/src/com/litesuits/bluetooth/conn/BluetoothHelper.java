@@ -22,7 +22,7 @@ public abstract class BluetoothHelper {
     private Handler handler = new Handler(Looper.getMainLooper());
     private TimeoutCallback timerTask;
     private long writeTimeout = 5000;
-    private long readTimeout = 1500;
+    private long readTimeout = 5000;
 
     /*------------ getter and setter  ------------ */
 

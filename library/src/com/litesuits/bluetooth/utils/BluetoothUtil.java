@@ -1,9 +1,8 @@
 package com.litesuits.bluetooth.utils;
 
-import android.bluetooth.BluetoothGatt;
-import android.bluetooth.BluetoothGattCharacteristic;
-import android.bluetooth.BluetoothGattDescriptor;
-import android.bluetooth.BluetoothGattService;
+import android.app.Activity;
+import android.bluetooth.*;
+import android.content.Intent;
 import android.util.Log;
 import com.litesuits.bluetooth.conn.TimeoutCallback;
 import com.litesuits.bluetooth.log.BleLog;
@@ -20,6 +19,11 @@ public class BluetoothUtil {
 
     private static final String TAG = "BluetoothUtil";
 
+    public static void enableBluetooth(Activity activity, int requestCode) {
+        Intent intent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
+        activity.startActivityForResult(intent, requestCode);
+    }
+
     public static void printServices(BluetoothGatt gatt) {
         if (gatt != null) {
             for (BluetoothGattService service : gatt.getServices()) {
@@ -35,6 +39,7 @@ public class BluetoothUtil {
     }
 
     /*------------  BluetoothGatt  ------------ */
+
     /**
      * Clears the device cache. After uploading new hello4 the DFU target will have other services than before.
      */
@@ -112,7 +117,7 @@ public class BluetoothUtil {
     }
 
     public static boolean enableCharacteristicNotification(BluetoothGatt gatt, BluetoothGattCharacteristic cha2App,
-                                                    String descriptorUUID) {
+                                                           String descriptorUUID) {
         if (cha2App != null) {
             BleLog.i(TAG, "cha2APP enable notification : " + cha2App.getUuid());
             //if ((cha2App.getProperties() | BluetoothGattCharacteristic.PROPERTY_READ) > 0) {

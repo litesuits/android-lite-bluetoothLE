@@ -55,7 +55,7 @@ public class LiteBluetooth {
         }
         closeAllConnects();
         listener.stateChanged(ConnectState.Scanning);
-        startScan(new PeriodMacScanCallback(mac, 15000, null) {
+        startScan(new PeriodMacScanCallback(mac, 7000, null) {
 
             @Override
             public void onScanTimeout() {
@@ -124,6 +124,7 @@ public class LiteBluetooth {
                             public void onServicesDiscoverTimeout(BluetoothGatt gatt) {
                                 BluetoothUtil.closeBluetoothGatt(gatt);
                                 listener.failed(ConnectError.ServiceDiscoverTimeout);
+                                listener.stateChanged(ConnectState.Initialed);
                             }
 
                             @Override

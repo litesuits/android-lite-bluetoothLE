@@ -13,7 +13,9 @@ public abstract class ConnectListener extends BluetoothHelper {
     public ConnectState getConnectState() {
         return connectState;
     }
-
+    public boolean isInConnected() {
+        return connectState == ConnectState.ServiceDiscovered;
+    }
     public boolean isInConnecting() {
         return getConnectState().isInConnecting();
     }
