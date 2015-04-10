@@ -1,3 +1,7 @@
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+
 /**
  * @author MaTianyu
  * @date 2015-03-13
@@ -17,9 +21,51 @@ public class StringFormat {
         System.out.println(hex);
         hex = invert(hex);
         System.out.println(hex);
-        hex = String.format("%024s", hex);
+        hex = String.format("%8s", hex);
         System.out.println(hex);
 
+        String[] a = new String[]{"a", "b"};
+        String[] c = new String[]{"c", "d"};
+        String[] e = new String[4];
+        System.arraycopy(a, 0, e, 0, a.length);
+        System.arraycopy(c, 0, e, a.length, c.length);
+        System.out.println(Arrays.toString(e));
+
+        ArrayList<A> list = new ArrayList<A>();
+        list.add(new A("1"));
+        list.add(new A("2"));
+        list.add(new A("3"));
+        a(list);
+        b(list.toArray());
+        b(list);
+        c(list.toArray());
+    }
+
+    static class A {
+        A(String a) {
+            this.a = a;
+        }
+
+        public String a;
+
+        @Override
+        public String toString() {
+            return "A{" +
+                    "a='" + a + '\'' +
+                    '}';
+        }
+    }
+
+    static void a(Collection<?> os) {
+        System.out.println(os.size() + ": " +os);
+    }
+
+    static void b(Object... os) {
+        System.out.println(os.length + ": " +Arrays.toString(os));
+    }
+
+    static void c(Object[] os) {
+        System.out.println(os.length + ": " +Arrays.toString(os));
     }
 
     static String complete(String hex, String cha, int len) {

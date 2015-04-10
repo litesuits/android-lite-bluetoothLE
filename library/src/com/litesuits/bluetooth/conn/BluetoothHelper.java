@@ -72,7 +72,9 @@ public abstract class BluetoothHelper {
     public void closeBluetoothGatt(BluetoothGatt gatt) {
         if (gatt != null) {
             gatt.disconnect();
+            refreshDeviceCache(gatt);
             gatt.close();
+            Log.i(TAG, "closed BluetoothGatt ");
         }
     }
 

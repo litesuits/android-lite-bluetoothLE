@@ -63,6 +63,7 @@ public class BluetoothUtil {
     public static void closeBluetoothGatt(BluetoothGatt gatt) {
         if (gatt != null) {
             gatt.disconnect();
+            refreshDeviceCache(gatt);
             gatt.close();
         }
     }

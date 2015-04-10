@@ -82,7 +82,10 @@ public class LiteBluetooth {
                 LiteBluetoothDevice liteDevice = new LiteBluetoothDevice(device);
                 listener.stateChanged(ConnectState.Connecting);
                 BluetoothGatt gatt = liteDevice.connect(context, autoConnect,
-                        new LiteBluetoothGatCallback(20000, 20000) {
+                        new LiteBluetoothGatCallback(15000, 15000) {
+
+                            final int MAX_RETRY = 1;
+                            int currentTry = 0;
 
                             @Override
                             public void onReadRemoteRssi(BluetoothGatt gatt, int rssi, int status) {
@@ -107,10 +110,16 @@ public class LiteBluetooth {
 
                             @Override
                             public void onConnectTimeout(BluetoothGatt gatt) {
-                                BleLog.e(TAG, " onConnectTimeout gatt: " + gatt);
-                                BluetoothUtil.closeBluetoothGatt(gatt);
-                                listener.failed(ConnectError.ConnectTimeout);
-                                listener.stateChanged(ConnectState.Initialed);
+                                BleLog.e(TAG, "onConnectTimeout gatt: " + gatt);
+                                if (currentTry++ < MAX_RETRY) {
+                                    notifyConnectStart(gatt);
+                                    boolean connect = gatt.connect();
+                                    BleLog.i(TAG, "BluetoothGatt retry connect: " + connect);
+                                } else {
+                                    BluetoothUtil.closeBluetoothGatt(gatt);
+                                    listener.failed(ConnectError.ConnectTimeout);
+                                    listener.stateChanged(ConnectState.Initialed);
+                                }
                             }
 
 
