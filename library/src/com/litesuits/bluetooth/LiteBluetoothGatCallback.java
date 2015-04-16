@@ -11,8 +11,8 @@ import java.util.UUID;
 
 public abstract class LiteBluetoothGatCallback extends BluetoothGattCallback {
     private static final String TAG = "LiteBluetoothGatCallback";
-    public static final int DEFAULT_CONNECT_TIMEOUT = 20000;
-    public static final int DEFAULT_DISCOVER_TIMEOUT = 15000;
+    public static final int DEFAULT_CONNECT_TIMEOUT = 10000;
+    public static final int DEFAULT_DISCOVER_TIMEOUT = 5000;
 
     private long connectTimeout = DEFAULT_CONNECT_TIMEOUT;
     private long discoverServicesTimeout = DEFAULT_DISCOVER_TIMEOUT;
@@ -48,7 +48,7 @@ public abstract class LiteBluetoothGatCallback extends BluetoothGattCallback {
 
     public abstract void onServicesDiscoveSuccess(BluetoothGatt gatt);
 
-    public abstract void onServicesDiscoverTimeout(BluetoothGatt gatt);
+    public abstract void onServicesDiscoverTimeout(BluetoothGatt gatt, int status);
 
     public abstract void onOtherTimeout(BluetoothGatt gatt, String msg);
 
@@ -72,30 +72,41 @@ public abstract class LiteBluetoothGatCallback extends BluetoothGattCallback {
     public void onConnectionStateChange(BluetoothGatt gatt, int status, int newState) {
         //super.onConnectionStateChange(gatt, status, newState);
         if (BleLog.isPrint) {
-            BleLog.v(TAG, "onServicesDiscovered  status: " + status + "  ,thread: " + Thread.currentThread().getId());
+            BleLog.i(TAG, "onConnectionStateChange  status: " + status + " ,newState: "+newState
+                   + "  ,thread: " + Thread.currentThread().getId());
         }
         this.bluetoothGatt = gatt;
-        if (newState == BluetoothGatt.STATE_CONNECTED) {
-            notifyConnectOver();
-            onConnectSuccess(gatt);
-        } else if (newState == BluetoothGatt.STATE_DISCONNECTED) {
+        if (newState == BluetoothGatt.STATE_DISCONNECTED) {
             onDisConnected(gatt);
         }
-        if (status != BluetoothGatt.GATT_SUCCESS) {
-            BleLog.e(TAG, "onServicesDiscovered status: " + status);
+        if (status == BluetoothGatt.GATT_SUCCESS) {
+            if (newState == BluetoothGatt.STATE_CONNECTED) {
+                notifyConnectOver();
+                onConnectSuccess(gatt);
+            }
+        } else {
+            notifyConnectOver();
+            if (connectTimeoutTask != null) {
+                handler.post(connectTimeoutTask);
+            }
+            BleLog.e(TAG, "onConnectionStateChange status: " + status);
         }
+
     }
 
     @Override
-    public void onServicesDiscovered(BluetoothGatt gatt, int status) {
+    public void onServicesDiscovered(final BluetoothGatt gatt, final int status) {
         //super.onServicesDiscovered(gatt, status);
         if (BleLog.isPrint) {
-            BleLog.v(TAG, "onServicesDiscovered  status: " + status + "  ,thread: " + Thread.currentThread().getId());
+            BleLog.i(TAG, "onServicesDiscovered  status: " + status + "  ,thread: " + Thread.currentThread().getId());
         }
+        notifyDiscoverServicesOver();
         if (status == BluetoothGatt.GATT_SUCCESS) {
-            notifyDiscoverServicesOver();
             onServicesDiscoveSuccess(gatt);
         } else {
+            if (discoverServicesTimeoutTask != null) {
+                handler.post(discoverServicesTimeoutTask);
+            }
             BleLog.e(TAG, "onServicesDiscovered status: " + status);
         }
     }
@@ -198,7 +209,7 @@ public abstract class LiteBluetoothGatCallback extends BluetoothGattCallback {
                 @Override
                 public void run() {
                     BleLog.e(TAG, "Bluetooth discover services timeout. 蓝牙发现服务超时 ");
-                    onServicesDiscoverTimeout(gatt);
+                    onServicesDiscoverTimeout(gatt, -1);
                 }
             };
         }

@@ -14,8 +14,8 @@ import com.litesuits.bluetooth.scan.PeriodScanCallback;
 import com.litesuits.bluetooth.utils.BluetoothUtil;
 import com.litesuits.bluetooth.utils.HandlerUtil;
 
-import java.util.HashMap;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * @author MaTianyu
@@ -26,7 +26,7 @@ public class LiteBluetooth {
     private Context context;
     private BluetoothManager bluetoothManager;
     private BluetoothAdapter bluetoothAdapter;
-    private HashMap<BluetoothGatt, String> gattMap = new HashMap<BluetoothGatt, String>();
+    private ConcurrentHashMap<BluetoothGatt, String> gattMap = new ConcurrentHashMap<BluetoothGatt, String>();
 
     public LiteBluetooth(Context context) {
         this.context = context = context.getApplicationContext();
@@ -53,9 +53,8 @@ public class LiteBluetooth {
             listener.failed(ConnectError.Invalidmac);
             return false;
         }
-        closeAllConnects();
         listener.stateChanged(ConnectState.Scanning);
-        startScan(new PeriodMacScanCallback(mac, 7000, null) {
+        startScan(new PeriodMacScanCallback(mac, 5000, null) {
 
             @Override
             public void onScanTimeout() {
@@ -65,27 +64,29 @@ public class LiteBluetooth {
 
             @Override
             public void onDeviceFound(final BluetoothDevice device, int rssi, byte[] scanRecord) {
-                connectDirectly(device, autoConnect, listener);
+                connect(device, autoConnect, listener);
             }
         });
         return true;
     }
 
 
-    public synchronized void connectDirectly(final BluetoothDevice device, final boolean autoConnect,
-                                             final ConnectListener listener) {
+    public synchronized void connect(final BluetoothDevice device, final boolean autoConnect,
+                                     final ConnectListener listener) {
         closeAllConnects();
-        Log.i(TAG, "连接：" + device.getName() + " mac:" + device.getAddress() + "  autoConnect:" + autoConnect);
+        Log.i(TAG, "连接：" + device.getName() + " mac:" + device.getAddress()
+                + "  autoConnect ---------------> " + autoConnect);
         HandlerUtil.runOnUiThread(new Runnable() {
             @Override
             public void run() {
                 LiteBluetoothDevice liteDevice = new LiteBluetoothDevice(device);
                 listener.stateChanged(ConnectState.Connecting);
                 BluetoothGatt gatt = liteDevice.connect(context, autoConnect,
-                        new LiteBluetoothGatCallback(15000, 15000) {
+                        new LiteBluetoothGatCallback(10000, 7000) {
 
                             final int MAX_RETRY = 1;
-                            int currentTry = 0;
+                            int connectTry = 0;
+                            int discorverTry = 0;
 
                             @Override
                             public void onReadRemoteRssi(BluetoothGatt gatt, int rssi, int status) {
@@ -109,14 +110,12 @@ public class LiteBluetooth {
                             }
 
                             @Override
-                            public void onConnectTimeout(BluetoothGatt gatt) {
-                                BleLog.e(TAG, "onConnectTimeout gatt: " + gatt);
-                                if (currentTry++ < MAX_RETRY) {
-                                    notifyConnectStart(gatt);
-                                    boolean connect = gatt.connect();
-                                    BleLog.i(TAG, "BluetoothGatt retry connect: " + connect);
+                            public void onConnectTimeout(final BluetoothGatt gatt) {
+                                if (connectTry++ < MAX_RETRY) {
+                                    retryConnectDirectly(this, gatt);
                                 } else {
                                     BluetoothUtil.closeBluetoothGatt(gatt);
+                                    gattMap.remove(gatt);
                                     listener.failed(ConnectError.ConnectTimeout);
                                     listener.stateChanged(ConnectState.Initialed);
                                 }
@@ -130,10 +129,17 @@ public class LiteBluetooth {
                             }
 
                             @Override
-                            public void onServicesDiscoverTimeout(BluetoothGatt gatt) {
-                                BluetoothUtil.closeBluetoothGatt(gatt);
-                                listener.failed(ConnectError.ServiceDiscoverTimeout);
-                                listener.stateChanged(ConnectState.Initialed);
+                            public void onServicesDiscoverTimeout(final BluetoothGatt gatt, int status) {
+                                BleLog.e(TAG, "onConnectTimeout gatt: " + gatt);
+                                if (discorverTry++ < MAX_RETRY) {
+                                    notifyDiscoverServicesStart(gatt);
+                                    gatt.discoverServices();
+                                } else {
+                                    BluetoothUtil.closeBluetoothGatt(gatt);
+                                    gattMap.remove(gatt);
+                                    listener.failed(ConnectError.ServiceDiscoverTimeout);
+                                    listener.stateChanged(ConnectState.Initialed);
+                                }
                             }
 
                             @Override
@@ -171,6 +177,16 @@ public class LiteBluetooth {
                 gattMap.put(gatt, System.currentTimeMillis() + "");
             }
         });
+    }
+
+    public BluetoothGatt retryConnectDirectly(LiteBluetoothGatCallback callback, BluetoothGatt gatt) {
+        BluetoothUtil.closeBluetoothGatt(gatt);
+        gattMap.remove(gatt);
+        BleLog.e(TAG, "BluetoothGatt retried connectGatt autoConnect ------------> false");
+        callback.notifyConnectStart(null);
+        BluetoothGatt gatt2 = gatt.getDevice().connectGatt(context, false, callback);
+        gattMap.put(gatt2, System.currentTimeMillis() + "");
+        return gatt2;
     }
 
     public void startScan(PeriodScanCallback callback) {

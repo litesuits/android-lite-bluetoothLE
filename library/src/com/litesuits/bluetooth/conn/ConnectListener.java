@@ -30,7 +30,7 @@ public abstract class ConnectListener extends BluetoothHelper {
 
 
     public final void stateChanged(ConnectState state) {
-        BleLog.i(TAG, "Ble stateChanged: " + state);
+        BleLog.i(TAG, "Ble stateChanged --------------------------> " + state);
         connectState = state;
         onStateChanged(state);
     }
@@ -38,7 +38,7 @@ public abstract class ConnectListener extends BluetoothHelper {
     public abstract void onStateChanged(ConnectState state);
 
     public final void failed(ConnectError error) {
-        BleLog.w(TAG, "Ble error: " + error);
+        BleLog.e(TAG, "Ble error -----------------------------> " + error);
         onFailed(error);
     }
 

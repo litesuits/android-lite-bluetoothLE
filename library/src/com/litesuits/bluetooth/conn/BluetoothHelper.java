@@ -21,8 +21,8 @@ public abstract class BluetoothHelper {
     private static final String TAG = "BluetoothHelper";
     private Handler handler = new Handler(Looper.getMainLooper());
     private TimeoutCallback timerTask;
-    private long writeTimeout = 5000;
-    private long readTimeout = 5000;
+    private long writeTimeout = 3000;
+    private long readTimeout = 3000;
 
     /*------------ getter and setter  ------------ */
 
@@ -43,12 +43,12 @@ public abstract class BluetoothHelper {
     }
 
     /*------------ TimerTask  ------------ */
-    public void notifyTimerTaskStart(final BluetoothGatt gatt, long timeoutMillis, final TimeoutCallback callback) {
+    public synchronized void notifyTimerTaskStart(final BluetoothGatt gatt, long timeoutMillis, final TimeoutCallback callback) {
         notifyTimerTaskRemove();
-        this.timerTask = callback;
-        if (callback != null) {
-            callback.setGatt(gatt);
-            handler.postDelayed(callback, timeoutMillis);
+        timerTask = callback;
+        if (timerTask != null) {
+            timerTask.setGatt(gatt);
+            handler.postDelayed(timerTask, timeoutMillis);
         }
     }
 
@@ -56,14 +56,14 @@ public abstract class BluetoothHelper {
         handler.post(runnable);
     }
 
-    public void notifyTimerTaskRemove() {
+    public synchronized void notifyTimerTaskRemove() {
         if (timerTask != null) {
             handler.removeCallbacks(timerTask);
         }
     }
 
     public void notifyTimerTaskRemove(TimeoutCallback callback) {
-        if (timerTask != null) {
+        if (callback != null) {
             handler.removeCallbacks(callback);
         }
     }
@@ -112,9 +112,9 @@ public abstract class BluetoothHelper {
 
     public boolean characteristicWrite(BluetoothGatt gatt, BluetoothGattCharacteristic charact, byte[] data, TimeoutCallback callback) {
         if (charact != null) {
+            notifyTimerTaskStart(gatt, getWriteTimeout(), callback);
             charact.setValue(data);
             gatt.writeCharacteristic(charact);
-            notifyTimerTaskStart(gatt, getWriteTimeout(), callback);
             return true;
         } else {
             refreshDeviceCache(gatt);
@@ -125,19 +125,29 @@ public abstract class BluetoothHelper {
 
     public boolean enableCharacteristicNotification(BluetoothGatt gatt, BluetoothGattCharacteristic cha2App,
                                                     String descriptorUUID) {
+        return enableCharacteristicNotification(gatt, cha2App, descriptorUUID, true);
+    }
+
+    public boolean disableCharacteristicNotification(BluetoothGatt gatt, BluetoothGattCharacteristic cha2App,
+                                                     String descriptorUUID) {
+        return enableCharacteristicNotification(gatt, cha2App, descriptorUUID, false);
+    }
+
+    private boolean enableCharacteristicNotification(BluetoothGatt gatt, BluetoothGattCharacteristic cha2App,
+                                                     String descriptorUUID, boolean enable) {
         if (cha2App != null) {
             BleLog.i(TAG, "cha2APP enable notification : " + cha2App.getUuid());
-            //if ((cha2App.getProperties() | BluetoothGattCharacteristic.PROPERTY_READ) > 0) {
-            //    Log.i(TAG, "直接可读 readCharacteristic ");
-            //    gatt.readCharacteristic(cha2App);
-            //}
             if ((cha2App.getProperties() | BluetoothGattCharacteristic.PROPERTY_NOTIFY) > 0) {
                 BleLog.i(TAG, "支持通知 readCharacteristic ");
-                gatt.setCharacteristicNotification(cha2App, true);
+                gatt.setCharacteristicNotification(cha2App, enable);
                 BluetoothGattDescriptor descriptor = cha2App.getDescriptor(UUID.fromString(descriptorUUID));
                 if (descriptor != null) {
                     BleLog.i(TAG, "开启通知 readCharacteristic ");
-                    descriptor.setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
+                    if (enable) {
+                        descriptor.setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
+                    } else {
+                        descriptor.setValue(BluetoothGattDescriptor.DISABLE_NOTIFICATION_VALUE);
+                    }
                     return gatt.writeDescriptor(descriptor);
                 }
             } else {

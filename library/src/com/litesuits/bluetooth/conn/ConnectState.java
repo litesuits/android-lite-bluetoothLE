@@ -15,7 +15,11 @@ public enum ConnectState {
     }
 
     public boolean isInConnecting() {
-        return this.code > 0 && this.code < 6;
+        return this.code > Initialed.code && this.code < ServiceDiscovered.code;
+    }
+
+    public boolean needConnect() {
+        return this.code == Initialed.code || this.code == DisConnected.code;
     }
 
     ConnectState(int code, String message) {

@@ -22,22 +22,22 @@ public class LiteBluetoothDevice {
     }
 
     public BluetoothGatt connect(Context context, LiteBluetoothGatCallback callback) {
+        callback.notifyConnectStart(null);
         BluetoothGatt gatt = bluetoothDevice.connectGatt(context, false, callback);
-        callback.notifyConnectStart(gatt);
         return gatt;
     }
 
 
     public BluetoothGatt connect(Context context, boolean autoConnect, LiteBluetoothGatCallback callback) {
+        callback.notifyConnectStart(null);
         BluetoothGatt gatt = bluetoothDevice.connectGatt(context, autoConnect, callback);
-        callback.notifyConnectStart(gatt);
         return gatt;
     }
 
 
     public void discoverServices(LiteBluetoothGatCallback callback, BluetoothGatt gatt) {
-        gatt.discoverServices();
         callback.notifyDiscoverServicesStart(gatt);
+        gatt.discoverServices();
     }
 
     public BluetoothDevice getBluetoothDevice() {
