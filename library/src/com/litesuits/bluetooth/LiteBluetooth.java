@@ -112,7 +112,13 @@ public class LiteBluetooth {
                             @Override
                             public void onConnectTimeout(final BluetoothGatt gatt) {
                                 if (connectTry++ < MAX_RETRY) {
-                                    retryConnectDirectly(this, gatt);
+                                    BluetoothDevice dev = device;
+                                    if (gatt != null) {
+                                        BluetoothUtil.closeBluetoothGatt(gatt);
+                                        gattMap.remove(gatt);
+                                        dev = gatt.getDevice();
+                                    }
+                                    retryConnectDirectly(this, dev);
                                 } else {
                                     BluetoothUtil.closeBluetoothGatt(gatt);
                                     gattMap.remove(gatt);
@@ -179,14 +185,15 @@ public class LiteBluetooth {
         });
     }
 
-    public BluetoothGatt retryConnectDirectly(LiteBluetoothGatCallback callback, BluetoothGatt gatt) {
-        BluetoothUtil.closeBluetoothGatt(gatt);
-        gattMap.remove(gatt);
-        BleLog.e(TAG, "BluetoothGatt retried connectGatt autoConnect ------------> false");
-        callback.notifyConnectStart(null);
-        BluetoothGatt gatt2 = gatt.getDevice().connectGatt(context, false, callback);
-        gattMap.put(gatt2, System.currentTimeMillis() + "");
-        return gatt2;
+    public BluetoothGatt retryConnectDirectly(LiteBluetoothGatCallback callback, BluetoothDevice device) {
+        if (device != null) {
+            BleLog.e(TAG, "BluetoothGatt retried connectGatt autoConnect ------------> false");
+            callback.notifyConnectStart(null);
+            BluetoothGatt gatt = device.connectGatt(context, false, callback);
+            gattMap.put(gatt, System.currentTimeMillis() + "");
+            return gatt;
+        }
+        return null;
     }
 
     public void startScan(PeriodScanCallback callback) {
