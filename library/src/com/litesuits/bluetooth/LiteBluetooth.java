@@ -81,7 +81,7 @@ public class LiteBluetooth {
             public void run() {
                 LiteBluetoothDevice liteDevice = new LiteBluetoothDevice(device);
                 listener.stateChanged(ConnectState.Connecting);
-                BluetoothGatt gatt = liteDevice.connect(context, autoConnect,
+                final BluetoothGatt bluetoothGatt = liteDevice.connect(context, autoConnect,
                         new LiteBluetoothGatCallback(10000, 7000) {
 
                             final int MAX_RETRY = 1;
@@ -120,8 +120,10 @@ public class LiteBluetooth {
                                     }
                                     retryConnectDirectly(this, dev);
                                 } else {
-                                    BluetoothUtil.closeBluetoothGatt(gatt);
-                                    gattMap.remove(gatt);
+                                    if (gatt != null) {
+                                        BluetoothUtil.closeBluetoothGatt(gatt);
+                                        gattMap.remove(gatt);
+                                    }
                                     listener.failed(ConnectError.ConnectTimeout);
                                     listener.stateChanged(ConnectState.Initialed);
                                 }
@@ -180,7 +182,7 @@ public class LiteBluetooth {
                                 listener.onDescriptorWrite(gatt, descriptor, status);
                             }
                         });
-                gattMap.put(gatt, System.currentTimeMillis() + "");
+                gattMap.put(bluetoothGatt, System.currentTimeMillis() + "");
             }
         });
     }
