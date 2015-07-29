@@ -75,7 +75,7 @@ public class LiteBluetooth {
                                      final ConnectListener listener) {
         closeAllConnects();
         Log.i(TAG, "连接：" + device.getName() + " mac:" + device.getAddress()
-                + "  autoConnect ---------------> " + autoConnect);
+                   + "  autoConnect ---------------> " + autoConnect);
         HandlerUtil.runOnUiThread(new Runnable() {
             @Override
             public void run() {
@@ -139,25 +139,32 @@ public class LiteBluetooth {
                             @Override
                             public void onServicesDiscoverTimeout(final BluetoothGatt gatt, int status) {
                                 BleLog.e(TAG, "onConnectTimeout gatt: " + gatt);
-                                if (discorverTry++ < MAX_RETRY) {
-                                    notifyDiscoverServicesStart(gatt);
-                                    gatt.discoverServices();
+                                if (gatt != null) {
+                                    if (discorverTry++ < MAX_RETRY) {
+                                        notifyDiscoverServicesStart(gatt);
+                                        gatt.discoverServices();
+                                    } else {
+                                        BluetoothUtil.closeBluetoothGatt(gatt);
+                                        gattMap.remove(gatt);
+                                        listener.failed(ConnectError.ServiceDiscoverTimeout);
+                                        listener.stateChanged(ConnectState.Initialed);
+                                    }
                                 } else {
-                                    BluetoothUtil.closeBluetoothGatt(gatt);
-                                    gattMap.remove(gatt);
                                     listener.failed(ConnectError.ServiceDiscoverTimeout);
                                     listener.stateChanged(ConnectState.Initialed);
                                 }
                             }
 
                             @Override
-                            public void onCharacteristicWrite(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status) {
+                            public void onCharacteristicWrite(BluetoothGatt gatt,
+                                                              BluetoothGattCharacteristic characteristic, int status) {
                                 super.onCharacteristicWrite(gatt, characteristic, status);
                                 listener.onCharacteristicWrite(gatt, characteristic, status);
                             }
 
                             @Override
-                            public void onCharacteristicChanged(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic) {
+                            public void onCharacteristicChanged(BluetoothGatt gatt,
+                                                                BluetoothGattCharacteristic characteristic) {
                                 super.onCharacteristicChanged(gatt, characteristic);
                                 listener.onCharacteristicChanged(gatt, characteristic);
                             }
@@ -173,16 +180,20 @@ public class LiteBluetooth {
                             }
 
                             @Override
-                            public void onDescriptorRead(BluetoothGatt gatt, BluetoothGattDescriptor descriptor, int status) {
+                            public void onDescriptorRead(BluetoothGatt gatt, BluetoothGattDescriptor descriptor,
+                                                         int status) {
                                 listener.onDescriptorRead(gatt, descriptor, status);
                             }
 
                             @Override
-                            public void onDescriptorWrite(BluetoothGatt gatt, BluetoothGattDescriptor descriptor, int status) {
+                            public void onDescriptorWrite(BluetoothGatt gatt, BluetoothGattDescriptor descriptor,
+                                                          int status) {
                                 listener.onDescriptorWrite(gatt, descriptor, status);
                             }
                         });
-                gattMap.put(bluetoothGatt, System.currentTimeMillis() + "");
+                if (bluetoothGatt != null) {
+                    gattMap.put(bluetoothGatt, System.currentTimeMillis() + "");
+                }
             }
         });
     }
@@ -192,7 +203,9 @@ public class LiteBluetooth {
             BleLog.e(TAG, "BluetoothGatt retried connectGatt autoConnect ------------> false");
             callback.notifyConnectStart(null);
             BluetoothGatt gatt = device.connectGatt(context, false, callback);
-            gattMap.put(gatt, System.currentTimeMillis() + "");
+            if (gatt != null) {
+                gattMap.put(gatt, System.currentTimeMillis() + "");
+            }
             return gatt;
         }
         return null;
