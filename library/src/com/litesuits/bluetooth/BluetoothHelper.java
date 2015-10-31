@@ -1,4 +1,4 @@
-package com.litesuits.bluetooth.conn;
+package com.litesuits.bluetooth;
 
 import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCharacteristic;
@@ -7,6 +7,7 @@ import android.bluetooth.BluetoothGattService;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
+import com.litesuits.bluetooth.conn.TimeoutCallback;
 import com.litesuits.bluetooth.log.BleLog;
 import com.litesuits.bluetooth.utils.HexUtil;
 
@@ -17,12 +18,20 @@ import java.util.UUID;
  * @author MaTianyu
  * @date 2015-01-29
  */
-public abstract class BluetoothHelper {
+public class BluetoothHelper {
     private static final String TAG = "BluetoothHelper";
-    private Handler handler = new Handler(Looper.getMainLooper());
+    protected Handler handler = new Handler(Looper.getMainLooper());
     private TimeoutCallback timerTask;
     private long writeTimeout = 3000;
     private long readTimeout = 3000;
+    protected BluetoothGatt bluetoothGatt;
+
+    public BluetoothHelper() {
+    }
+
+    public BluetoothHelper(BluetoothGatt bluetoothGatt) {
+        this.bluetoothGatt = bluetoothGatt;
+    }
 
     /*------------ getter and setter  ------------ */
 
@@ -42,12 +51,21 @@ public abstract class BluetoothHelper {
         this.readTimeout = readTimeout;
     }
 
+    public BluetoothGatt getBluetoothGatt() {
+        return bluetoothGatt;
+    }
+
+    public BluetoothHelper setBluetoothGatt(BluetoothGatt bluetoothGatt) {
+        this.bluetoothGatt = bluetoothGatt;
+        return this;
+    }
+
     /*------------ TimerTask  ------------ */
-    public synchronized void notifyTimerTaskStart(final BluetoothGatt gatt, long timeoutMillis, final TimeoutCallback callback) {
+    public synchronized void notifyTimerTaskStart(final BluetoothGatt gatt, long timeoutMillis,
+                                                  final TimeoutCallback callback) {
         notifyTimerTaskRemove();
         timerTask = callback;
         if (timerTask != null) {
-            timerTask.setGatt(gatt);
             handler.postDelayed(timerTask, timeoutMillis);
         }
     }
@@ -92,48 +110,65 @@ public abstract class BluetoothHelper {
         return null;
     }
 
-    public boolean characteristicWrite(BluetoothGatt gatt, String serviceUUID, String charactUUID, String hex, TimeoutCallback callback) {
-        BluetoothGattCharacteristic characteristic = getCharacteristic(gatt, serviceUUID, charactUUID);
-        return characteristicWrite(gatt, characteristic, hex, callback);
+    public BluetoothGattCharacteristic getCharacteristic(String serviceUUID, String charactUUID) {
+        if (bluetoothGatt != null) {
+            BluetoothGattService service = bluetoothGatt.getService(UUID.fromString(serviceUUID));
+            if (service != null) {
+                return service.getCharacteristic(UUID.fromString(charactUUID));
+            }
+        }
+        return null;
     }
 
-    public boolean characteristicWrite(BluetoothGatt gatt, String serviceUUID, String charactUUID, byte[] data, TimeoutCallback callback) {
-        BluetoothGattCharacteristic characteristic = getCharacteristic(gatt, serviceUUID, charactUUID);
-        return characteristicWrite(gatt, characteristic, data, callback);
+    public boolean characteristicWrite(String serviceUUID, String charactUUID,
+                                       String hex, TimeoutCallback callback) {
+        BluetoothGattCharacteristic characteristic = getCharacteristic(serviceUUID, charactUUID);
+        return characteristicWrite(characteristic, hex, callback);
     }
 
-    public boolean characteristicWrite(BluetoothGatt gatt, BluetoothGattCharacteristic charact, String hex, TimeoutCallback callback) {
+    public boolean characteristicWrite(String serviceUUID, String charactUUID,
+                                       byte[] data, TimeoutCallback callback) {
+        BluetoothGattCharacteristic characteristic = getCharacteristic(serviceUUID, charactUUID);
+        return characteristicWrite(characteristic, data, callback);
+    }
+
+    public boolean characteristicWrite(BluetoothGattCharacteristic charact,
+                                       String hex, TimeoutCallback callback) {
         if (charact == null || hex == null) {
             return false;
         }
         BleLog.e(TAG, charact.getUuid() + "写入：" + hex);
-        return characteristicWrite(gatt, charact, HexUtil.decodeHex(hex.toCharArray()), callback);
+        return characteristicWrite(charact, HexUtil.decodeHex(hex.toCharArray()), callback);
     }
 
-    public boolean characteristicWrite(BluetoothGatt gatt, BluetoothGattCharacteristic charact, byte[] data, TimeoutCallback callback) {
-        if (charact != null) {
-            notifyTimerTaskStart(gatt, getWriteTimeout(), callback);
+    public boolean characteristicWrite(BluetoothGattCharacteristic charact,
+                                       byte[] data, TimeoutCallback callback) {
+        if (bluetoothGatt != null && charact != null) {
+            notifyTimerTaskStart(bluetoothGatt, getWriteTimeout(), callback);
             charact.setValue(data);
-            gatt.writeCharacteristic(charact);
+            bluetoothGatt.writeCharacteristic(charact);
             return true;
         } else {
-            refreshDeviceCache(gatt);
+            refreshDeviceCache(bluetoothGatt);
             BleLog.e(TAG, "Characteristic 为空");
             return false;
         }
     }
 
-    public boolean enableCharacteristicNotification(BluetoothGatt gatt, BluetoothGattCharacteristic cha2App,
+    public boolean enableCharacteristicNotification(BluetoothGatt gatt,
+                                                    BluetoothGattCharacteristic cha2App,
                                                     String descriptorUUID) {
         return enableCharacteristicNotification(gatt, cha2App, descriptorUUID, true);
     }
 
-    public boolean disableCharacteristicNotification(BluetoothGatt gatt, BluetoothGattCharacteristic cha2App,
+    public boolean disableCharacteristicNotification(BluetoothGatt gatt,
+                                                     BluetoothGattCharacteristic cha2App,
                                                      String descriptorUUID) {
         return enableCharacteristicNotification(gatt, cha2App, descriptorUUID, false);
     }
 
-    private boolean enableCharacteristicNotification(BluetoothGatt gatt, BluetoothGattCharacteristic cha2App,
+    private boolean enableCharacteristicNotification(BluetoothGatt gatt,
+                                                     BluetoothGattCharacteristic cha2App,
                                                      String descriptorUUID, boolean enable) {
         if (cha2App != null) {
             BleLog.i(TAG, "cha2APP enable notification : " + cha2App.getUuid());
@@ -157,7 +192,6 @@ public abstract class BluetoothHelper {
         return false;
     }
 
-
     /**
      * Clears the device cache. After uploading new hello4 the DFU target will have other services than before.
      */
@@ -176,5 +210,9 @@ public abstract class BluetoothHelper {
             Log.e(TAG, "An exception occured while refreshing device", e);
         }
         return false;
+    }
+
+    public boolean readRemoteRssi() {
+        return bluetoothGatt != null && bluetoothGatt.readRemoteRssi();
     }
 }

@@ -3,12 +3,13 @@ package com.litesuits.bluetooth.conn;
 import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattDescriptor;
+import com.litesuits.bluetooth.*;
 import com.litesuits.bluetooth.log.BleLog;
 
 public abstract class ConnectListener extends BluetoothHelper {
     private static final String TAG = "ConnectListener";
-    private ConnectState connectState = ConnectState.Initialed;
-    private BluetoothGatt bluetoothGatt;
+    protected ConnectState connectState = ConnectState.Initialed;
+    protected BluetoothGatt bluetoothGatt;
 
     public ConnectState getConnectState() {
         return connectState;
@@ -58,5 +59,20 @@ public abstract class ConnectListener extends BluetoothHelper {
     public void onDescriptorWrite(BluetoothGatt gatt, BluetoothGattDescriptor descriptor, int status) {
     }
     public void onReadRemoteRssi(BluetoothGatt gatt, int rssi, int status) {
+    }
+
+    public void closeBluetoothGatt() {
+        handler.post(new Runnable() {
+            @Override
+            public void run() {
+                if (bluetoothGatt != null) {
+                    bluetoothGatt.disconnect();
+                    refreshDeviceCache(bluetoothGatt);
+                    bluetoothGatt.close();
+                    stateChanged(ConnectState.Initialed);
+                    BleLog.i(TAG, "ble 成功关闭");
+                }
+            }
+        });
     }
 }

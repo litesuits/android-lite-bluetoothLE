@@ -3,7 +3,6 @@ package com.litesuits.bluetooth.scan;
 import android.bluetooth.BluetoothAdapter;
 import android.os.Handler;
 import android.os.Looper;
-import com.litesuits.bluetooth.conn.BluetoothHelper;
 
 /**
  * @author MaTianyu
@@ -11,10 +10,14 @@ import com.litesuits.bluetooth.conn.BluetoothHelper;
  */
 public abstract class PeriodScanCallback extends BluetoothHelper implements BluetoothAdapter.LeScanCallback {
     private Handler handler = new Handler(Looper.getMainLooper());
-    private long             timeoutMillis;
+    private long timeoutMillis;
     private BluetoothAdapter adapter;
 
-    protected PeriodScanCallback(final long timeoutMillis, final BluetoothAdapter adapter) {
+    public PeriodScanCallback(final long timeoutMillis) {
+        this(timeoutMillis, null);
+    }
+
+    public PeriodScanCallback(final long timeoutMillis, final BluetoothAdapter adapter) {
         this.timeoutMillis = timeoutMillis;
         this.adapter = adapter;
     }
@@ -36,13 +39,15 @@ public abstract class PeriodScanCallback extends BluetoothHelper implements Blue
     }
 
     public void stopScanAndNotify() {
-        if (adapter == null) throw new IllegalArgumentException("Scan callback has no BluetoothAdapter！");
+        if (adapter == null)
+            throw new IllegalArgumentException("Scan callback has no BluetoothAdapter！");
         notifyScanStoped();
         adapter.stopLeScan(PeriodScanCallback.this);
     }
 
     public void notifyScanStoped() {
-        if (handler != null) handler.removeCallbacksAndMessages(null);
+        if (handler != null)
+            handler.removeCallbacksAndMessages(null);
     }
 
     public long getTimeoutMillis() {

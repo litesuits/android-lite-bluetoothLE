@@ -11,7 +11,11 @@ public abstract class PeriodMacScanCallback extends PeriodScanCallback {
     private String mac;
     private boolean hasConnect;
 
-    protected PeriodMacScanCallback(String mac, long timeoutMillis, BluetoothAdapter adapter) {
+    public PeriodMacScanCallback(String mac, long timeoutMillis) {
+        this(mac, timeoutMillis, null);
+    }
+
+    public PeriodMacScanCallback(String mac, long timeoutMillis, BluetoothAdapter adapter) {
         super(timeoutMillis, adapter);
         this.mac = mac;
         if (mac == null) {

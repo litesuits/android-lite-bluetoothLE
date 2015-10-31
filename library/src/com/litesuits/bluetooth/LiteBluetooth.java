@@ -198,7 +198,7 @@ public class LiteBluetooth {
         });
     }
 
-    public BluetoothGatt retryConnectDirectly(LiteBluetoothGatCallback callback, BluetoothDevice device) {
+    private BluetoothGatt retryConnectDirectly(LiteBluetoothGatCallback callback, BluetoothDevice device) {
         if (device != null) {
             BleLog.e(TAG, "BluetoothGatt retried connectGatt autoConnect ------------> false");
             callback.notifyConnectStart(null);
@@ -268,15 +268,7 @@ public class LiteBluetooth {
         return bluetoothManager;
     }
 
-    public void setBluetoothManager(BluetoothManager bluetoothManager) {
-        this.bluetoothManager = bluetoothManager;
-    }
-
     public BluetoothAdapter getBluetoothAdapter() {
         return bluetoothAdapter;
-    }
-
-    public void setBluetoothAdapter(BluetoothAdapter bluetoothAdapter) {
-        this.bluetoothAdapter = bluetoothAdapter;
     }
 }

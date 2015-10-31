@@ -1,2 +1,2 @@
-# LiteBle
-Bluetooth 4.0
+# LiteBle: Android Bluetooth Framework
+
