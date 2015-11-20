@@ -1,7 +1,8 @@
 package com.litesuits.bluetooth.scan;
 
-import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
+
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * @author MaTianyu
@@ -9,30 +10,23 @@ import android.bluetooth.BluetoothDevice;
  */
 public abstract class PeriodMacScanCallback extends PeriodScanCallback {
     private String mac;
-    private boolean hasConnect;
+    private AtomicBoolean hasFound = new AtomicBoolean(false);
 
     public PeriodMacScanCallback(String mac, long timeoutMillis) {
-        this(mac, timeoutMillis, null);
-    }
-
-    public PeriodMacScanCallback(String mac, long timeoutMillis, BluetoothAdapter adapter) {
-        super(timeoutMillis, adapter);
-        this.mac = mac;
+        super(timeoutMillis);
         if (mac == null) {
             throw new IllegalArgumentException("start scan, mac can not be null!");
         }
+        this.mac = mac;
     }
-
 
     @Override
     public void onLeScan(BluetoothDevice device, int rssi, byte[] scanRecord) {
-        if (hasConnect) {
-            stopScanAndNotify();
-        } else {
+        if (!hasFound.get()) {
             if (mac.equalsIgnoreCase(device.getAddress())) {
+                hasFound.set(true);
                 stopScanAndNotify();
                 onDeviceFound(device, rssi, scanRecord);
-                hasConnect = true;
             }
         }
     }

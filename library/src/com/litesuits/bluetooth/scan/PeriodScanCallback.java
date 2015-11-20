@@ -8,18 +8,13 @@ import android.os.Looper;
  * @author MaTianyu
  * @date 2015-01-22
  */
-public abstract class PeriodScanCallback extends BluetoothHelper implements BluetoothAdapter.LeScanCallback {
+public abstract class PeriodScanCallback implements BluetoothAdapter.LeScanCallback {
     private Handler handler = new Handler(Looper.getMainLooper());
     private long timeoutMillis;
     private BluetoothAdapter adapter;
 
     public PeriodScanCallback(final long timeoutMillis) {
-        this(timeoutMillis, null);
-    }
-
-    public PeriodScanCallback(final long timeoutMillis, final BluetoothAdapter adapter) {
         this.timeoutMillis = timeoutMillis;
-        this.adapter = adapter;
     }
 
     public abstract void onScanTimeout();

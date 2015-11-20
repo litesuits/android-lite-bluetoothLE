@@ -61,7 +61,8 @@ public class BluetoothHelper {
     }
 
     /*------------ TimerTask  ------------ */
-    public synchronized void notifyTimerTaskStart(final BluetoothGatt gatt, long timeoutMillis,
+    public synchronized void notifyTimerTaskStart(final BluetoothGatt gatt,
+                                                  long timeoutMillis,
                                                   final TimeoutCallback callback) {
         notifyTimerTaskRemove();
         timerTask = callback;

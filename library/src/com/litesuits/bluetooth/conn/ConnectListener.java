@@ -21,13 +21,13 @@ public abstract class ConnectListener extends BluetoothHelper {
         return getConnectState().isInConnecting();
     }
 
-    public BluetoothGatt getBluetoothGatt() {
-        return bluetoothGatt;
-    }
+    //public BluetoothGatt getBluetoothGatt() {
+    //    return bluetoothGatt;
+    //}
 
-    public void setBluetoothGatt(BluetoothGatt bluetoothGatt) {
-        this.bluetoothGatt = bluetoothGatt;
-    }
+    //public void setBluetoothGatt(BluetoothGatt bluetoothGatt) {
+    //    this.bluetoothGatt = bluetoothGatt;
+    //}
 
 
     public final void stateChanged(ConnectState state) {
