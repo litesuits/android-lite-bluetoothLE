@@ -6,7 +6,7 @@ Communication with BluetoothLE(BLE) device as easy as HTTP communication.
 
 ##Usage
 
-1. scan device
+###1. scan device
 ```java
 private static int TIME_OUT_SCAN = 10000;
 liteBluetooth.startLeScan(new PeriodScanCallback(TIME_OUT_SCAN) {
@@ -23,7 +23,7 @@ liteBluetooth.startLeScan(new PeriodScanCallback(TIME_OUT_SCAN) {
 });
 ```
 
-2. scan and connect 
+###2. scan and connect 
 ```java
 private static String MAC = "00:00:00:AA:AA:AA";
 liteBluetooth.scanAndConnect(MAC, false, new BleGattCallback() {
@@ -49,7 +49,7 @@ liteBluetooth.scanAndConnect(MAC, false, new BleGattCallback() {
 ```
 
 
-3. write data to characteritic 
+###3. write data to characteritic 
 ```java
 LiteBleConnector connector = liteBluetooth.newBleConnector();
 connector.withUUIDString(UUID_SERVICE, UUID_CHAR_WRITE, null)
@@ -85,7 +85,7 @@ connector.withUUIDString(UUID_SERVICE, UUID_CHAR_WRITE, UUID_DESCRIPTOR_WRITE)
          });
 ```
 
-5. read data from characteritic 
+###5. read data from characteritic 
 ```java
 LiteBleConnector connector = liteBluetooth.newBleConnector();
 connector.withUUIDString(UUID_SERVICE, UUID_CHAR_READ, null)
@@ -103,7 +103,7 @@ connector.withUUIDString(UUID_SERVICE, UUID_CHAR_READ, null)
          });
 ```
 
-6. enable notification of characteristic
+###6. enable notification of characteristic
 ```java
 LiteBleConnector connector = liteBluetooth.newBleConnector();
 connector.withUUIDString(UUID_SERVICE, UUID_CHAR_READ, null)
@@ -122,7 +122,7 @@ connector.withUUIDString(UUID_SERVICE, UUID_CHAR_READ, null)
          });
 ```
 
-7. enable notification of descriptor
+###7. enable notification of descriptor
 ```java
 LiteBleConnector connector = liteBluetooth.newBleConnector();
 connector.withUUIDString(UUID_SERVICE, UUID_CHAR_READ, UUID_DESCRIPTOR_READ)
@@ -141,7 +141,7 @@ connector.withUUIDString(UUID_SERVICE, UUID_CHAR_READ, UUID_DESCRIPTOR_READ)
          });
 ```
 
-8. read RSSI of device
+###8. read RSSI of device
 ```java
 liteBluetooth.newBleConnector()
              .readRemoteRssi(new BleRssiCallback() {
