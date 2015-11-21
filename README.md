@@ -67,7 +67,7 @@ connector.withUUIDString(UUID_SERVICE, UUID_CHAR_WRITE, null)
          });
 ```
 
-4. write data to descriptor 
+###4. write data to descriptor 
 ```java
 LiteBleConnector connector = liteBluetooth.newBleConnector();
 connector.withUUIDString(UUID_SERVICE, UUID_CHAR_WRITE, UUID_DESCRIPTOR_WRITE)
