@@ -8,7 +8,7 @@ import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattDescriptor;
 import android.os.Bundle;
 import android.widget.Toast;
-import com.litesuits.bluetooth.BleGattCallback;
+import com.litesuits.bluetooth.LiteBleGattCallback;
 import com.litesuits.bluetooth.LiteBluetooth;
 import com.litesuits.bluetooth.conn.BleCharactCallback;
 import com.litesuits.bluetooth.conn.BleDescriptorCallback;
@@ -103,7 +103,7 @@ public class SampleActivity extends Activity {
 
 
     private void scanAndConnect() {
-        liteBluetooth.scanAndConnect(MAC, false, new BleGattCallback() {
+        liteBluetooth.scanAndConnect(MAC, false, new LiteBleGattCallback() {
 
             @Override
             public void onConnectSuccess(BluetoothGatt gatt, int status) {
@@ -136,7 +136,7 @@ public class SampleActivity extends Activity {
             @Override
             public void onDeviceFound(final BluetoothDevice device, int rssi, byte[] scanRecord) {
                 Toast.makeText(activity, "发现 " + device.getAddress() + " 正在连接...", Toast.LENGTH_LONG).show();
-                liteBluetooth.connect(device, false, new BleGattCallback() {
+                liteBluetooth.connect(device, false, new LiteBleGattCallback() {
 
                     @Override
                     public void onConnectSuccess(BluetoothGatt gatt, int status) {
