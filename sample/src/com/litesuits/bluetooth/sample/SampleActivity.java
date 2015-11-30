@@ -2,10 +2,7 @@ package com.litesuits.bluetooth.sample;
 
 import android.app.Activity;
 import android.app.AlertDialog;
-import android.bluetooth.BluetoothDevice;
-import android.bluetooth.BluetoothGatt;
-import android.bluetooth.BluetoothGattCharacteristic;
-import android.bluetooth.BluetoothGattDescriptor;
+import android.bluetooth.*;
 import android.os.Bundle;
 import android.widget.Toast;
 import com.litesuits.bluetooth.LiteBleGattCallback;
@@ -70,6 +67,9 @@ public class SampleActivity extends Activity {
         bleExceptionHandler = new DefaultBleExceptionHandler(this);
     }
 
+    /**
+     * scan devices for a while
+     */
     private void scanDevicesPeriod() {
         liteBluetooth.startLeScan(new PeriodScanCallback(TIME_OUT_SCAN) {
             @Override
@@ -85,6 +85,9 @@ public class SampleActivity extends Activity {
         });
     }
 
+    /**
+     * scan a specified device for a while
+     */
     private void scanSpecifiedDevicePeriod() {
         liteBluetooth.startLeScan(new PeriodMacScanCallback(MAC, TIME_OUT_SCAN) {
 
@@ -101,7 +104,9 @@ public class SampleActivity extends Activity {
         });
     }
 
-
+    /**
+     * scan and connect to device
+     */
     private void scanAndConnect() {
         liteBluetooth.scanAndConnect(MAC, false, new LiteBleGattCallback() {
 
@@ -125,6 +130,9 @@ public class SampleActivity extends Activity {
         });
     }
 
+    /**
+     * scan first, then connect
+     */
     private void scanThenConnect() {
         liteBluetooth.startLeScan(new PeriodMacScanCallback(MAC, TIME_OUT_SCAN) {
 
@@ -159,7 +167,73 @@ public class SampleActivity extends Activity {
         });
     }
 
+    /**
+     * get state
+     */
+    private void getBluetoothState() {
+        BleLog.i(TAG, "liteBluetooth.getConnectionState: " + liteBluetooth.getConnectionState());
+        BleLog.i(TAG, "liteBluetooth isInScanning: " + liteBluetooth.isInScanning());
+        BleLog.i(TAG, "liteBluetooth isConnected: " + liteBluetooth.isConnected());
+        BleLog.i(TAG, "liteBluetooth isServiceDiscoered: " + liteBluetooth.isServiceDiscoered());
+        if (liteBluetooth.getConnectionState() >= LiteBluetooth.STATE_CONNECTING) {
+            BleLog.i(TAG, "lite bluetooth is in connecting or connected");
+        }
+        if (liteBluetooth.getConnectionState() == LiteBluetooth.STATE_SERVICES_DISCOVERED) {
+            BleLog.i(TAG, "lite bluetooth is in connected, services have been found");
+        }
+    }
 
+    /**
+     * add(remove) new callback to an existing connection.
+     * One Device, One {@link LiteBluetooth}.
+     * But one device( {@link LiteBluetooth}) can add many callback {@link BluetoothGattCallback}
+     *
+     * {@link LiteBleGattCallback} is a extension of {@link BluetoothGattCallback}
+     */
+    private void addNewCallbackToOneConnection() {
+        BluetoothGattCallback liteCallback = new BluetoothGattCallback() {
+            @Override
+            public void onConnectionStateChange(BluetoothGatt gatt, int status, int newState) {}
+
+            @Override
+            public void onCharacteristicChanged(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic) {
+            }
+
+            @Override
+            public void onCharacteristicWrite(BluetoothGatt gatt,
+                                              BluetoothGattCharacteristic characteristic, int status) {
+            }
+
+            @Override
+            public void onReadRemoteRssi(BluetoothGatt gatt, int rssi, int status) {}
+        };
+
+        if (liteBluetooth.isConnectingOrConnected()) {
+            liteBluetooth.addGattCallback(liteCallback);
+            liteBluetooth.removeGattCallback(liteCallback);
+        }
+    }
+
+    /**
+     * refresh bluetooth device cache
+     */
+    private void refreshDeviceCache() {
+        liteBluetooth.refreshDeviceCache();
+    }
+
+
+    /**
+     * close connection
+     */
+    private void closeBluetoothGatt() {
+        if (liteBluetooth.isConnectingOrConnected()) {
+            liteBluetooth.closeBluetoothGatt();
+        }
+    }
+
+    /**
+     * write data to characteristic
+     */
     private void writeDataToCharacteristic() {
         LiteBleConnector connector = liteBluetooth.newBleConnector();
         connector.withUUIDString(UUID_SERVICE, UUID_CHAR_WRITE, null)
@@ -177,6 +251,9 @@ public class SampleActivity extends Activity {
                  });
     }
 
+    /**
+     * write data to descriptor
+     */
     private void writeDataToDescriptor() {
         LiteBleConnector connector = liteBluetooth.newBleConnector();
         connector.withUUIDString(UUID_SERVICE, UUID_CHAR_WRITE, UUID_DESCRIPTOR_WRITE)
@@ -194,6 +271,9 @@ public class SampleActivity extends Activity {
                  });
     }
 
+    /**
+     * read data from characteristic
+     */
     private void readDataFromCharacteristic() {
         LiteBleConnector connector = liteBluetooth.newBleConnector();
         connector.withUUIDString(UUID_SERVICE, UUID_CHAR_READ, null)
@@ -211,6 +291,9 @@ public class SampleActivity extends Activity {
                  });
     }
 
+    /**
+     * read data from descriptor
+     */
     private void readDataFromDescriptor() {
         LiteBleConnector connector = liteBluetooth.newBleConnector();
         connector.withUUIDString(UUID_SERVICE, UUID_CHAR_READ, UUID_DESCRIPTOR_READ)
@@ -228,6 +311,9 @@ public class SampleActivity extends Activity {
                  });
     }
 
+    /**
+     * enble notification of characteristic
+     */
     private void enableNotificationOfCharacteristic() {
         LiteBleConnector connector = liteBluetooth.newBleConnector();
         connector.withUUIDString(UUID_SERVICE, UUID_CHAR_READ, null)
@@ -246,6 +332,9 @@ public class SampleActivity extends Activity {
                  });
     }
 
+    /**
+     * enable notification of descriptor
+     */
     private void enableNotificationOfDescriptor() {
         LiteBleConnector connector = liteBluetooth.newBleConnector();
         connector.withUUIDString(UUID_SERVICE, UUID_CHAR_READ, UUID_DESCRIPTOR_READ)
@@ -265,6 +354,9 @@ public class SampleActivity extends Activity {
     }
 
 
+    /**
+     * read RSSI of device
+     */
     public void readRssiOfDevice() {
         liteBluetooth.newBleConnector()
                      .readRemoteRssi(new BleRssiCallback() {

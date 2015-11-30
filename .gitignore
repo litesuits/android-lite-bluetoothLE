@@ -32,3 +32,11 @@ proguard/
 .idea/
 
 .DS_Store
+
+sample/project.properties
+
+sample/build.xml
+
+sample/ant.properties
+
+sample/build.xml

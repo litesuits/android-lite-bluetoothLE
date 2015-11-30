@@ -1,8 +1,10 @@
-# LiteBle: Android Bluetooth Framework
-
+## LiteBle: Android Bluetooth Framework
 Extremely simple! Based on callback.
-
 Communication with BluetoothLE(BLE) device as easy as HTTP communication.
+One Device, One connection, One LiteBluetooth Instance.
+
+But One connection can has many callback:
+One LiteBluetooth Instance can add many BluetoothGattCallback.
 
 ##Usage
 
@@ -49,7 +51,68 @@ liteBluetooth.scanAndConnect(MAC, false, new BleGattCallback() {
 ```
 
 
-###3. write data to characteritic 
+###3. get state of litebluetooth
+```java
+BleLog.i(TAG, "liteBluetooth.getConnectionState: " + liteBluetooth.getConnectionState());
+BleLog.i(TAG, "liteBluetooth isInScanning: " + liteBluetooth.isInScanning());
+BleLog.i(TAG, "liteBluetooth isConnected: " + liteBluetooth.isConnected());
+BleLog.i(TAG, "liteBluetooth isServiceDiscoered: " + liteBluetooth.isServiceDiscoered());
+if (liteBluetooth.getConnectionState() >= LiteBluetooth.STATE_CONNECTING) {
+    BleLog.i(TAG, "lite bluetooth is in connecting or connected");
+}
+if (liteBluetooth.getConnectionState() == LiteBluetooth.STATE_SERVICES_DISCOVERED) {
+    BleLog.i(TAG, "lite bluetooth is in connected, services have been found");
+}
+```
+
+###4. add(remove) new callback to an existing connection.
+```java
+/**
+ * add(remove) new callback to an existing connection.
+ * One Device, One {@link LiteBluetooth}.
+ * But one device( {@link LiteBluetooth}) can add many callback {@link BluetoothGattCallback}
+ *
+ * {@link LiteBleGattCallback} is a extension of {@link BluetoothGattCallback}
+ */
+private void addNewCallbackToOneConnection() {
+    BluetoothGattCallback liteCallback = new BluetoothGattCallback() {
+        @Override
+        public void onConnectionStateChange(BluetoothGatt gatt, int status, int newState) {}
+
+        @Override
+        public void onCharacteristicChanged(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic) {
+        }
+
+        @Override
+        public void onCharacteristicWrite(BluetoothGatt gatt,
+                                          BluetoothGattCharacteristic characteristic, int status) {
+        }
+
+        @Override
+        public void onReadRemoteRssi(BluetoothGatt gatt, int rssi, int status) {}
+    };
+
+    if (liteBluetooth.isConnectingOrConnected()) {
+        liteBluetooth.addGattCallback(liteCallback);
+        liteBluetooth.removeGattCallback(liteCallback);
+    }
+}
+```
+
+###5. refresh bluetooth device cache 
+```java
+liteBluetooth.refreshDeviceCache();
+```
+
+###6. close connection
+```java
+if (liteBluetooth.isConnectingOrConnected()) {
+    liteBluetooth.closeBluetoothGatt();
+}
+```
+
+
+###7. write data to characteritic 
 ```java
 LiteBleConnector connector = liteBluetooth.newBleConnector();
 connector.withUUIDString(UUID_SERVICE, UUID_CHAR_WRITE, null)
@@ -67,7 +130,7 @@ connector.withUUIDString(UUID_SERVICE, UUID_CHAR_WRITE, null)
          });
 ```
 
-###4. write data to descriptor 
+###8. write data to descriptor 
 ```java
 LiteBleConnector connector = liteBluetooth.newBleConnector();
 connector.withUUIDString(UUID_SERVICE, UUID_CHAR_WRITE, UUID_DESCRIPTOR_WRITE)
@@ -85,7 +148,7 @@ connector.withUUIDString(UUID_SERVICE, UUID_CHAR_WRITE, UUID_DESCRIPTOR_WRITE)
          });
 ```
 
-###5. read data from characteritic 
+###9. read data from characteritic 
 ```java
 LiteBleConnector connector = liteBluetooth.newBleConnector();
 connector.withUUIDString(UUID_SERVICE, UUID_CHAR_READ, null)
@@ -103,7 +166,7 @@ connector.withUUIDString(UUID_SERVICE, UUID_CHAR_READ, null)
          });
 ```
 
-###6. enable notification of characteristic
+###10. enable notification of characteristic
 ```java
 LiteBleConnector connector = liteBluetooth.newBleConnector();
 connector.withUUIDString(UUID_SERVICE, UUID_CHAR_READ, null)
@@ -122,7 +185,7 @@ connector.withUUIDString(UUID_SERVICE, UUID_CHAR_READ, null)
          });
 ```
 
-###7. enable notification of descriptor
+###11. enable notification of descriptor
 ```java
 LiteBleConnector connector = liteBluetooth.newBleConnector();
 connector.withUUIDString(UUID_SERVICE, UUID_CHAR_READ, UUID_DESCRIPTOR_READ)
@@ -141,7 +204,7 @@ connector.withUUIDString(UUID_SERVICE, UUID_CHAR_READ, UUID_DESCRIPTOR_READ)
          });
 ```
 
-###8. read RSSI of device
+###12. read RSSI of device
 ```java
 liteBluetooth.newBleConnector()
              .readRemoteRssi(new BleRssiCallback() {
@@ -159,7 +222,7 @@ liteBluetooth.newBleConnector()
 ```
 
 
-##More Detail
+##More Detail, See The Smaple
 
 ---
 Website : http://litesuits.com
