@@ -221,8 +221,7 @@ liteBluetooth.newBleConnector()
              });
 ```
 
-
-##More Detail, See The Smaple
+##More Detail, See The Sample
 
 ---
 Website : http://litesuits.com
