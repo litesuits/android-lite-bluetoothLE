@@ -1,3 +1,18 @@
+/*
+ * Copyright (C) 2013 litesuits.com
+ *
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ *
+ *  http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ */
 package com.litesuits.bluetooth;
 
 import android.app.Activity;
@@ -22,10 +37,10 @@ import java.util.Set;
 /**
  * One Device, One connection, One {@link LiteBluetooth} Instance.
  * One connection can has many callback.
- * <p>
+ * <p/>
  * One {@link LiteBluetooth} Instance can add many {@link BluetoothGattCallback}
  * {@link LiteBleGattCallback} is an abstract extension of {@link BluetoothGattCallback}.
- * <p>
+ * <p/>
  *
  * @author MaTianyu
  * @date 2015-01-16
@@ -90,7 +105,7 @@ public class LiteBluetooth {
 
     /**
      * Starts a scan for Bluetooth LE devices.
-     *
+     * <p/>
      * <p>Requires {@link android.Manifest.permission#BLUETOOTH_ADMIN} permission.
      *
      * @param callback the callback LE scan results are delivered
@@ -133,7 +148,7 @@ public class LiteBluetooth {
      * Note: Be Sure Call This On Main(UI) Thread!
      * Note: Be Sure Call This On Main(UI) Thread!
      * Note: Be Sure Call This On Main(UI) Thread!
-     *
+     * <p/>
      * Connect to GATT Server hosted by this device. Caller acts as GATT client.
      * The callback is used to deliver results to Caller, such as connection status as well
      * as any further GATT client operations.
@@ -151,15 +166,15 @@ public class LiteBluetooth {
                                               final boolean autoConnect,
                                               final LiteBleGattCallback callback) {
         Log.i(TAG, "connect device：" + device.getName()
-                   + " mac:" + device.getAddress()
-                   + " autoConnect ------> " + autoConnect);
+                + " mac:" + device.getAddress()
+                + " autoConnect ------> " + autoConnect);
         callbackList.add(callback);
         return device.connectGatt(context, autoConnect, coreGattCallback);
     }
 
     /**
      * Note: Be Sure Call This On Main(UI) Thread!
-     *
+     * <p/>
      * Try to scan specified device. Connect to GATT Server hosted by this device. Caller acts as GATT client.
      * The callback is used to deliver results to Caller, such as connection status as well
      * as any further GATT client operations.
@@ -313,7 +328,7 @@ public class LiteBluetooth {
         public void onConnectionStateChange(BluetoothGatt gatt, int status, int newState) {
             if (BleLog.isPrint) {
                 BleLog.i(TAG, "onConnectionStateChange  status: " + status
-                              + " ,newState: " + newState + "  ,thread: " + Thread.currentThread().getId());
+                        + " ,newState: " + newState + "  ,thread: " + Thread.currentThread().getId());
             }
             if (newState == BluetoothGatt.STATE_CONNECTED) {
                 connectionState = STATE_CONNECTED;
